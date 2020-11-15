@@ -1,6 +1,9 @@
 package ae
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestMetadataSearch(t *testing.T) {
 	c, err := NewClient("hurr", "durr")
@@ -8,7 +11,7 @@ func TestMetadataSearch(t *testing.T) {
 		t.Fatalf("expected err to be nil, got: %v", err)
 	}
 
-	ft, err := NewFingerprintFromFile("")
+	ft, err := NewFingerprintFromFile("/home/stepan/Downloads/Black_Hole_Sun.m4a")
 	if err != nil {
 		t.Fatalf("expected err to be nil, got: %v", err)
 	}
@@ -22,5 +25,5 @@ func TestMetadataSearch(t *testing.T) {
 		t.Fatalf("expected err to be nil, got: %v", err)
 	}
 
-	// TODO: check the rest
+	fmt.Printf("%+v\n", res)
 }

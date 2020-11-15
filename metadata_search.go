@@ -1,5 +1,3 @@
-// Copyright 2020 Pexeso Inc. All rights reserved.
-
 package ae
 
 // #include <pex/aesdk/c/metadata_search.h>
@@ -55,6 +53,8 @@ func (x *MetadataSearch) Do(req *MetadataSearchRequest) (*MetadataSearchResult, 
 	}
 	defer C.AE_MetadataSearchResult_Delete(&cResult)
 
+	C.AE_MetadataSearchRequest_SetFingerprint(cRequest, req.Fingerprint.ft)
+
 	C.AE_MetadataSearch_Do(x.search, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
@@ -98,5 +98,6 @@ func (x *MetadataSearch) Do(req *MetadataSearchRequest) (*MetadataSearchResult, 
 	return &MetadataSearchResult{
 		LookupID:    uint64(C.AE_MetadataSearchResult_GetLookupID(cResult)),
 		CompletedAt: time.Unix(completedAtUnix, 0),
+		Matches:     matches,
 	}, nil
 }

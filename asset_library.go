@@ -63,12 +63,6 @@ func (x *AssetLibrary) GetAsset(id uint64) (*Asset, error) {
 	}
 
 	// We only need to allocate these when we've already successfully received the asset.
-	cLicensors := C.AE_AssetLicensors_New()
-	if cStatus == nil {
-		panic("out of memory")
-	}
-	defer C.AE_AssetLicensors_Delete(&cLicensors)
-
 	cMetadata := C.AE_AssetMetadata_New()
 	if cMetadata == nil {
 		panic("out of memory")
