@@ -1,6 +1,6 @@
 package ae
 
-// #include <pex/aesdk/c/metadata_search.h>
+// #include <pex/ae/metadata_search.h>
 // #include <stdlib.h>
 import "C"
 import "time"
