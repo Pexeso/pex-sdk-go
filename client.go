@@ -2,10 +2,10 @@
 
 package ae
 
-// #cgo pkg-config: ae
-// #include <pex/aesdk/c/client.h>
-// #include <pex/aesdk/c/metadata_search.h>
-// #include <pex/aesdk/c/asset_library.h>
+// #cgo pkg-config: pexae
+// #include <pex/ae/client.h>
+// #include <pex/ae/metadata_search.h>
+// #include <pex/ae/asset_library.h>
 // #include <stdlib.h>
 import "C"
 import "unsafe"

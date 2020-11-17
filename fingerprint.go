@@ -3,7 +3,7 @@
 package ae
 
 // #include <stdlib.h>
-// #include <pex/aesdk/c/fingerprint.h>
+// #include <pex/ae/fingerprint.h>
 import "C"
 import "unsafe"
 
