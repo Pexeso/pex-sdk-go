@@ -6,7 +6,7 @@ import (
 )
 
 func TestMetadataSearch(t *testing.T) {
-	c, err := NewClient("hurr", "durr")
+	c, err := NewClient("client01", "secret01")
 	if err != nil {
 		t.Fatalf("expected err to be nil, got: %v", err)
 	}

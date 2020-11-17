@@ -15,18 +15,31 @@ type Client struct {
 }
 
 func NewClient(clientID, clientSecret string) (*Client, error) {
+	cStatus := C.AE_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Status_Delete(&cStatus)
+
 	cClientID := C.CString(clientID)
 	defer C.free(unsafe.Pointer(cClientID))
 
 	cClientSecret := C.CString(clientSecret)
 	defer C.free(unsafe.Pointer(cClientSecret))
 
-	client := C.AE_Client_New(cClientID, cClientSecret)
-	if client == nil {
+	cClient := C.AE_Client_New()
+	if cClient == nil {
 		panic("out of memory")
 	}
+
+	C.AE_Client_Init(cClient, cClientID, cClientSecret, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		C.free(unsafe.Pointer(cClient))
+		return nil, err
+	}
+
 	return &Client{
-		client: client,
+		client: cClient,
 	}, nil
 }
 
