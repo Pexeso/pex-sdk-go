@@ -2,7 +2,7 @@
 
 package ae
 
-// #include <pex/ae/status.h>
+// #include <pex/ae/sdk/c/status.h>
 import "C"
 import "fmt"
 

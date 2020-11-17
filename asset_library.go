@@ -2,7 +2,7 @@
 
 package ae
 
-// #include <pex/ae/asset_library.h>
+// #include <pex/ae/sdk/c/asset_library.h>
 // #include <stdlib.h>
 import "C"
 

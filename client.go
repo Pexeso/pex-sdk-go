@@ -3,9 +3,9 @@
 package ae
 
 // #cgo pkg-config: pexae
-// #include <pex/ae/client.h>
-// #include <pex/ae/metadata_search.h>
-// #include <pex/ae/asset_library.h>
+// #include <pex/ae/sdk/c/client.h>
+// #include <pex/ae/sdk/c/metadata_search.h>
+// #include <pex/ae/sdk/c/asset_library.h>
 // #include <stdlib.h>
 import "C"
 import "unsafe"
