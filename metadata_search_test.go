@@ -11,7 +11,7 @@ func TestMetadataSearch(t *testing.T) {
 		t.Fatalf("expected err to be nil, got: %v", err)
 	}
 
-	ft, err := NewFingerprintFromFile("/home/stepan/Downloads/Black_Hole_Sun.m4a")
+	ft, err := NewFingerprintFromFile("/home/stepan/Downloads/test.m4a")
 	if err != nil {
 		t.Fatalf("expected err to be nil, got: %v", err)
 	}

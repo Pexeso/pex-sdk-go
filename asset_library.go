@@ -69,6 +69,8 @@ func (x *AssetLibrary) GetAsset(id uint64) (*Asset, error) {
 	}
 	defer C.AE_AssetMetadata_Delete(&cMetadata)
 
+	C.AE_Asset_GetMetadata(cAsset, cMetadata)
+
 	// Extract Artists
 	var cArtist *C.char
 	var cArtistsPos C.size_t = 0
@@ -95,7 +97,7 @@ func (x *AssetLibrary) GetAsset(id uint64) (*Asset, error) {
 	defer C.AE_AssetLicensors_Delete(&cAssetLicensors)
 
 	var cAssetLicensorsPos C.size_t = 0
-	var assetLicensors map[string][]string
+	var assetLicensors = make(map[string][]string)
 
 	for C.AE_AssetMetadata_NextLicensors(cMetadata, cAssetLicensors, &cAssetLicensorsPos) {
 		var cLicensor *C.char
