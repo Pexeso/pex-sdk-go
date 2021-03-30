@@ -64,6 +64,13 @@
 //     }
 //     defer client.Close()
 //
+//     // You can also initialize a client that uses the mockserver:
+//     client2, err := pexae.NewMockserverClient(clientID, clientSecret)
+//     if err != nil {
+//         panic(err)
+//     }
+//     defer client2.Close()
+//
 //     // Build the request.
 //     req := &pexae.MetadataSearchRequest{
 //         Fingerprint: ft,
