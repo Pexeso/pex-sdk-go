@@ -7,8 +7,7 @@ package pexae
 import "C"
 import "unsafe"
 
-// NewMockserverClient creates a new instance of the client that will  using
-// provided credentials for authentication.
+// NewMockserverClient creates a new instance of the client that will communicate with the mockserver using provided credentials for authentication.
 func NewMockserverClient(clientID, clientSecret string) (*Client, error) {
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
