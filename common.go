@@ -1,6 +1,6 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-package ae
+package pexae
 
 // Segment is the range [start, end) in both the query and the asset of
 // where the match was found within the asset.
