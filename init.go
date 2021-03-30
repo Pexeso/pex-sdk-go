@@ -1,6 +1,6 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-package ae
+package pexae
 
 // #include <pex/ae/sdk/c/init.h>
 import "C"
