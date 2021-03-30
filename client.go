@@ -59,7 +59,10 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 		C.free(unsafe.Pointer(cClient))
 		return nil, err
 	}
+	return buildClient(cClient), nil
+}
 
+func buildClient(cClient *C.AE_Client) *Client {
 	cAssetLibrary := C.AE_AssetLibrary_New(cClient)
 	if cAssetLibrary == nil {
 		panic("out of memory")
@@ -86,7 +89,7 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 		MetadataSearch: &MetadataSearch{
 			c: cMetadataSearch,
 		},
-	}, nil
+	}
 }
 
 // Close closes all connections to the backend service and releases
