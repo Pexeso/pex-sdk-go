@@ -23,7 +23,7 @@
 //
 // You can generate a fingerprint from a media file:
 //
-//     ft, err := ae.NewFingerprintFromFile("/path/to/file.mp4")
+//     ft, err := pexae.NewFingerprintFromFile("/path/to/file.mp4")
 //     if err != nil {
 //         panic(err)
 //     }
@@ -35,7 +35,7 @@
 //
 //     b, _ := ioutil.ReadFile("/path/to/file.mp4")
 //
-//     ft, err := ae.NewFingerprintFromBuffer(b)
+//     ft, err := pexae.NewFingerprintFromBuffer(b)
 //     if err != nil {
 //         panic(err)
 //     }
@@ -58,14 +58,14 @@
 // After the fingerprint is generated, you can use it to perform a metadata search.
 //
 //     // First, you need to initialize a client:
-//     client, err := ae.NewClient(clientID, clientSecret)
+//     client, err := pexae.NewClient(clientID, clientSecret)
 //     if err != nil {
 //         panic(err)
 //     }
 //     defer client.Close()
 //
 //     // Build the request.
-//     req := &ae.MetadataSearchRequest{
+//     req := &pexae.MetadataSearchRequest{
 //         Fingerprint: ft,
 //     }
 //
@@ -94,7 +94,7 @@
 //     // ...
 //
 //     // Build the request.
-//     req := &ae.LicenseSearchRequest{
+//     req := &pexae.LicenseSearchRequest{
 //         Fingerprint: ft,
 //     }
 //
