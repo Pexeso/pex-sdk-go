@@ -27,10 +27,9 @@ const (
 	AssetTypeVideo = AssetType(2)
 )
 
-// Asset contains all information about a particular asset. Searches
-// performed through the SDK match against assets representing
-// copywritten works. It can be retrieved using the
-// AssetLibrary.GetAsset function.
+// Asset contains all information about a particular asset. Searches performed
+// through the SDK match against assets representing copyrighted works. It can
+// be retrieved using the AssetLibrary.GetAsset function.
 type Asset struct {
 	Metadata *AssetMetadata
 }
