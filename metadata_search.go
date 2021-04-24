@@ -10,17 +10,17 @@ import (
 	"sync"
 )
 
-// Holds all data necessary to perform a metadata search. Currently, a search
-// can only be performed using a fingerprint, but more parameters can be
-// supported in the future.
+// Holds all data necessary to perform a metadata search. A search can only be
+// performed using a fingerprint, but additional parameters may be supported in
+// the future.
 type MetadataSearchRequest struct {
 	// A fingerprint obtained by calling either NewFingerprintFromFile
 	// or NewFingerprintFromBuffer. This field is required.
 	Fingerprint *Fingerprint
 }
 
-// This object is returned from MetadataSearchFuture.Get upon
-// successful comptetion.
+// This object is returned from MetadataSearchFuture.Get upon successful
+// completion.
 type MetadataSearchResult struct {
 	// An ID that uniquely identifies a particular search. Can be used
 	// for diagnostics.

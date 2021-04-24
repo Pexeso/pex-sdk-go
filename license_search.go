@@ -23,12 +23,17 @@ const (
 	BasicPolicyBlock = BasicPolicy(1)
 )
 
+// Holds all data necessary to perform a license search. A search can only be
+// performed using a fingerprint, but additional parameters may be supported in
+// the future.
 type LicenseSearchRequest struct {
 	// A fingerprint obtained by calling either NewFingerprintFromFile or
 	// NewFingerprintFromBuffer. This field is required.
 	Fingerprint *Fingerprint
 }
 
+// This object is returned from LicenseSearchFuture.Get upon successful
+// completion.
 type LicenseSearchResult struct {
 	// An ID that uniquely identifies a particular search. Can be used for
 	// diagnostics.
