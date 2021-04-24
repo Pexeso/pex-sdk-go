@@ -1,6 +1,6 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-// Welcome to the Go bindings API reference for the Attribution Engine's SDK.
+// Welcome to the Go bindings reference manual for the Attribution Engine's SDK.
 //
 // Important! Please make sure to install the core library, as described in the
 // following link: https://docs.ae.pex.com/installation/, before trying to use
