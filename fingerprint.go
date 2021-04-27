@@ -42,7 +42,10 @@ func LoadDumpedFingerprint(dump []byte) (*Fingerprint, error) {
 	}
 	defer C.AE_Buffer_Delete(&b)
 
-	C.AE_Buffer_Set(b, C.CBytes(dump), C.size_t(len(dump)))
+	cDump := C.CBytes(dump)
+	defer C.free(cDump)
+
+	C.AE_Buffer_Set(b, cDump, C.size_t(len(dump)))
 	C.AE_Fingerprint_Load(ft, b)
 
 	return &Fingerprint{ft}, nil
@@ -72,7 +75,10 @@ func newFingerprint(input []byte, isFile bool) (*Fingerprint, error) {
 		}
 		defer C.AE_Buffer_Delete(&buffer)
 
-		C.AE_Buffer_Set(buffer, C.CBytes(input), C.size_t(len(input)))
+		cInput := C.CBytes(input)
+		defer C.free(cInput)
+
+		C.AE_Buffer_Set(buffer, cInput, C.size_t(len(input)))
 		C.AE_Fingerprint_FromBuffer(ft, buffer, status)
 	}
 
