@@ -39,9 +39,6 @@ type MetadataSearchMatch struct {
 	// AssetLibrary.GetAsset.
 	AssetID uint64
 
-	// One of: recording, composition, video.
-	AssetType AssetType
-
 	// A list of matching segments.
 	Segments []*Segment
 }
@@ -159,9 +156,8 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 		}
 
 		matches = append(matches, &MetadataSearchMatch{
-			AssetID:   uint64(C.AE_MetadataSearchMatch_GetAssetID(cMatch)),
-			AssetType: AssetType(C.AE_MetadataSearchMatch_GetAssetType(cMatch)),
-			Segments:  segments,
+			AssetID:  uint64(C.AE_MetadataSearchMatch_GetAssetID(cMatch)),
+			Segments: segments,
 		})
 	}
 

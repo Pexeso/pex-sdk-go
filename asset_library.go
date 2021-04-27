@@ -31,6 +31,10 @@ const (
 // through the SDK match against assets representing copyrighted works. It can
 // be retrieved using the AssetLibrary.GetAsset function.
 type Asset struct {
+	// One of: recording, composition, video.
+	Type AssetType
+
+	// Metadata associated with the asset.
 	Metadata *AssetMetadata
 }
 
@@ -136,6 +140,7 @@ func (x *AssetLibrary) GetAsset(id uint64) (*Asset, error) {
 	}
 
 	return &Asset{
+		Type: AssetType(C.AE_Asset_GetType(cAsset)),
 		Metadata: &AssetMetadata{
 			ISRC:      C.GoString(C.AE_AssetMetadata_GetISRC(cMetadata)),
 			Title:     C.GoString(C.AE_AssetMetadata_GetTitle(cMetadata)),
