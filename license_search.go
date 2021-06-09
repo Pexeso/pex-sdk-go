@@ -39,6 +39,9 @@ type LicenseSearchResult struct {
 	// diagnostics.
 	LookupID uint64
 
+	// An ID that uniquely identifies the UGC. It is used to provide UGC metadata back to Pex.
+	UGCID uint64
+
 	// A map where the key is a territory and the value is BasicPolicy (either
 	// allow or block). The territory codes conform to
 	// the ISO 3166-1 alpha-2 standard. For more information visit
@@ -143,6 +146,7 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 
 	return &LicenseSearchResult{
 		LookupID: uint64(C.AE_LicenseSearchResult_GetLookupID(cResult)),
+		UGCID:    uint64(C.AE_LicenseSearchResult_GetUGCID(cResult)),
 		Policies: policies,
 	}
 }
