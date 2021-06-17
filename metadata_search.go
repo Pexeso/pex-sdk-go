@@ -26,6 +26,9 @@ type MetadataSearchResult struct {
 	// for diagnostics.
 	LookupID uint64
 
+	// An ID that uniquely identifies the UGC. It is used to provide UGC metadata back to Pex.
+	UGCID uint64
+
 	// A list of matches.
 	Matches []*MetadataSearchMatch
 }
@@ -163,6 +166,7 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 
 	return &MetadataSearchResult{
 		LookupID: uint64(C.AE_MetadataSearchResult_GetLookupID(cResult)),
+		UGCID:    uint64(C.AE_MetadataSearchResult_GetUGCID(cResult)),
 		Matches:  matches,
 	}
 }
