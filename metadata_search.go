@@ -95,6 +95,10 @@ type MetadataSearchFuture struct {
 	m sync.Mutex
 }
 
+func (x *MetadataSearchFuture) LookupID() uint64 {
+	return C.AE_MetadataSearchFuture_GetLookupID(x.c)
+}
+
 // Get blocks until the search result is ready and then returns it. It
 // also releases all the allocated resources, so it will return an
 // error when called multiple times.
