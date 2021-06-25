@@ -21,6 +21,8 @@ const (
 	StatusInternalError    = StatusCode(7)
 	StatusNotInitialized   = StatusCode(8)
 	StatusConnectionError  = StatusCode(9)
+	StatusLookupFailed     = StatusCode(10)
+	StatusLookupTimedOut   = StatusCode(11)
 )
 
 // Error will be returend by most SDK functions. Besides an error
