@@ -84,7 +84,7 @@ func (x *MetadataSearch) Start(req *MetadataSearchRequest) (*MetadataSearchFutur
 	}
 
 	return &MetadataSearchFuture{
-		LookupID: C.AE_MetadataSearchFuture_GetLookupID(x.c),
+		LookupID: uint64(C.AE_MetadataSearchFuture_GetLookupID(cFuture)),
 		c:        cFuture,
 	}, nil
 }
