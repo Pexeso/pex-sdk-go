@@ -87,7 +87,7 @@ func (x *LicenseSearch) Start(req *LicenseSearchRequest) (*LicenseSearchFuture, 
 	}
 
 	return &LicenseSearchFuture{
-		LookupID: C.AE_LicenseSearchFuture_GetLookupID(x.c),
+		LookupID: uint64(C.AE_LicenseSearchFuture_GetLookupID(cFuture)),
 		c:        cFuture,
 	}, nil
 }
