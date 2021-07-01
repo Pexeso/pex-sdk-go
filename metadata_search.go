@@ -84,13 +84,16 @@ func (x *MetadataSearch) Start(req *MetadataSearchRequest) (*MetadataSearchFutur
 	}
 
 	return &MetadataSearchFuture{
-		c: cFuture,
+		LookupID: C.AE_MetadataSearchFuture_GetLookupID(x.c),
+		c:        cFuture,
 	}, nil
 }
 
 // MetadataSearchFuture object is returned by the MetadataSearch.Start
 // function and is used to retrieve a search result.
 type MetadataSearchFuture struct {
+	LookupID uint64
+
 	c *C.AE_MetadataSearchFuture
 	m sync.Mutex
 }

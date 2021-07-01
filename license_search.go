@@ -87,13 +87,16 @@ func (x *LicenseSearch) Start(req *LicenseSearchRequest) (*LicenseSearchFuture, 
 	}
 
 	return &LicenseSearchFuture{
-		c: cFuture,
+		LookupID: C.AE_LicenseSearchFuture_GetLookupID(x.c),
+		c:        cFuture,
 	}, nil
 }
 
 // LicenseSearchFuture is returned by the LicenseSearch.Start method
 // and is used to retrieve a search result.
 type LicenseSearchFuture struct {
+	LookupID uint64
+
 	c *C.AE_LicenseSearchFuture
 	m sync.Mutex
 }
