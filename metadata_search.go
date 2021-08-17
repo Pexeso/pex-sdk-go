@@ -2,7 +2,8 @@
 
 package pexae
 
-// #include <pex/ae/sdk/c/metadata_search.h>
+// #include <pex/ae/sdk/asset.h>
+// #include <pex/ae/sdk/metadata_search.h>
 // #include <stdlib.h>
 import "C"
 import (
@@ -26,9 +27,6 @@ type MetadataSearchResult struct {
 	// for diagnostics.
 	LookupID uint64
 
-	// An ID that uniquely identifies the UGC. It is used to provide UGC metadata back to Pex.
-	UGCID uint64
-
 	// A list of matches.
 	Matches []*MetadataSearchMatch
 }
@@ -40,7 +38,7 @@ type MetadataSearchMatch struct {
 	// An ID that uniquely identifies a matching asset. This can be used to
 	// retrieve detailed information about the asset using
 	// AssetLibrary.GetAsset.
-	AssetID uint64
+	Asset *Asset
 
 	// A list of matching segments.
 	Segments []*Segment
@@ -141,7 +139,13 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 	}
 	defer C.AE_MetadataSearchMatch_Delete(&cMatch)
 
-	var cMatchesPos C.size_t = 0
+	cAsset := C.AE_Asset_New()
+	if cAsset == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Asset_Delete(&cAsset)
+
+	var cMatchesPos C.int = 0
 	var matches []*MetadataSearchMatch
 
 	for C.AE_MetadataSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
@@ -149,7 +153,7 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 		var cQueryEnd C.int64_t
 		var cAssetStart C.int64_t
 		var cAssetEnd C.int64_t
-		var cSegmentsPos C.size_t = 0
+		var cSegmentsPos C.int = 0
 		var segments []*Segment
 
 		for C.AE_MetadataSearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cSegmentsPos) {
@@ -161,15 +165,16 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 			})
 		}
 
+		C.AE_MetadataSearchMatch_GetAsset(cMatch, cAsset)
+
 		matches = append(matches, &MetadataSearchMatch{
-			AssetID:  uint64(C.AE_MetadataSearchMatch_GetAssetID(cMatch)),
+			Asset:    newAssetFromC(cAsset),
 			Segments: segments,
 		})
 	}
 
 	return &MetadataSearchResult{
 		LookupID: uint64(C.AE_MetadataSearchResult_GetLookupID(cResult)),
-		UGCID:    uint64(C.AE_MetadataSearchResult_GetUGCID(cResult)),
 		Matches:  matches,
 	}
 }

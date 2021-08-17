@@ -3,7 +3,7 @@
 package pexae
 
 // #include <stdlib.h>
-// #include <pex/ae/sdk/c/fingerprint.h>
+// #include <pex/ae/sdk/fingerprint.h>
 import "C"
 import "unsafe"
 
@@ -26,29 +26,6 @@ func NewFingerprintFromFile(path string) (*Fingerprint, error) {
 // media file loaded in memory as a byte slice.
 func NewFingerprintFromBuffer(buffer []byte) (*Fingerprint, error) {
 	return newFingerprint(buffer, false)
-}
-
-// LoadDumpedfingerprint loads a fingerprint previously serialized by
-// the Fingerprint.Dump() function.
-func LoadDumpedFingerprint(dump []byte) (*Fingerprint, error) {
-	ft := C.AE_Fingerprint_New()
-	if ft == nil {
-		panic("out of memory")
-	}
-
-	b := C.AE_Buffer_New()
-	if b == nil {
-		panic("out of memory")
-	}
-	defer C.AE_Buffer_Delete(&b)
-
-	cDump := C.CBytes(dump)
-	defer C.free(cDump)
-
-	C.AE_Buffer_Set(b, cDump, C.size_t(len(dump)))
-	C.AE_Fingerprint_Load(ft, b)
-
-	return &Fingerprint{ft}, nil
 }
 
 func newFingerprint(input []byte, isFile bool) (*Fingerprint, error) {
@@ -94,22 +71,4 @@ func newFingerprint(input []byte, isFile bool) (*Fingerprint, error) {
 func (f *Fingerprint) Close() error {
 	C.AE_Fingerprint_Delete(&f.ft)
 	return nil
-}
-
-// Dump serializes the fingerprint into a byte slice so that it can be
-// stored on a disk or in a dabase. It can later be deserialized with
-// the LoadDumpedFingerprint() function.
-func (f *Fingerprint) Dump() []byte {
-	b := C.AE_Buffer_New()
-	if b == nil {
-		panic("out of memory")
-	}
-	defer C.AE_Buffer_Delete(&b)
-
-	C.AE_Fingerprint_Dump(f.ft, b)
-
-	data := C.AE_Buffer_GetData(b)
-	size := C.int(C.AE_Buffer_GetSize(b))
-
-	return C.GoBytes(data, size)
 }

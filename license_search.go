@@ -2,25 +2,13 @@
 
 package pexae
 
-// #include <pex/ae/sdk/c/license_search.h>
+// #include <pex/ae/sdk/asset.h>
+// #include <pex/ae/sdk/license_search.h>
 // #include <stdlib.h>
 import "C"
 import (
 	"errors"
 	"sync"
-)
-
-// BasicPolicy is an enumeration of possible license policies for queried
-// content.
-type BasicPolicy int
-
-const (
-	// The content should be allowed to be uploaded to the platform.
-	BasicPolicyAllow = BasicPolicy(0)
-
-	// The content should not be allowed to be uploaded to the platform,
-	// because it includes copyrighted content.
-	BasicPolicyBlock = BasicPolicy(1)
 )
 
 // Holds all data necessary to perform a license search. A search can only be
@@ -30,6 +18,36 @@ type LicenseSearchRequest struct {
 	// A fingerprint obtained by calling either NewFingerprintFromFile or
 	// NewFingerprintFromBuffer. This field is required.
 	Fingerprint *Fingerprint
+}
+
+type LicenseRightsholder struct {
+	ID    uint64
+	Title string
+}
+
+type LicensePolicy struct {
+	ID           uint64
+	CategoryID   uint64
+	CategoryName string
+}
+
+type LicenseRightsholderPolicy struct {
+	Rightsholder *LicenseRightsholder
+	Policy       *LicensePolicy
+}
+
+type LicenseSearchMatch struct {
+	// An asset that matched with the query fingerprint.
+	Asset *Asset
+
+	// A list of matching segments.
+	Segments []*Segment
+
+	// A map where the key is a territory and the value is
+	// RightsholderPolicy. The territory codes conform to the ISO 3166-1
+	// alpha-2 standard. For more information visit
+	// https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
+	Policies map[string][]*LicenseRightsholderPolicy
 }
 
 // This object is returned from LicenseSearchFuture.Get upon successful
@@ -42,11 +60,8 @@ type LicenseSearchResult struct {
 	// An ID that uniquely identifies the UGC. It is used to provide UGC metadata back to Pex.
 	UGCID uint64
 
-	// A map where the key is a territory and the value is BasicPolicy (either
-	// allow or block). The territory codes conform to
-	// the ISO 3166-1 alpha-2 standard. For more information visit
-	// https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
-	Policies map[string]BasicPolicy
+	// A list of matches.
+	Matches []*LicenseSearchMatch
 }
 
 // This class encapsulates all operations necessary to perform a license
@@ -138,18 +153,93 @@ func (x *LicenseSearchFuture) close() {
 }
 
 func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *LicenseSearchResult {
-	var cTerritory *C.char
-	var cPolicy C.int
-	var cPoliciesPos C.size_t = 0
-	policies := make(map[string]BasicPolicy)
+	cMatch := C.AE_LicenseSearchMatch_New()
+	if cMatch == nil {
+		panic("out of memory")
+	}
+	defer C.AE_LicenseSearchMatch_Delete(&cMatch)
 
-	for C.AE_LicenseSearchResult_NextPolicy(cResult, &cTerritory, &cPolicy, &cPoliciesPos) {
-		policies[C.GoString(cTerritory)] = BasicPolicy(cPolicy)
+	cAsset := C.AE_Asset_New()
+	if cAsset == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Asset_Delete(&cAsset)
+
+	cRightsholderPolicies := C.AE_LicenseRightsholderPolicies_New()
+	if cRightsholderPolicies == nil {
+		panic("out of memory")
+	}
+	defer C.AE_LicenseRightsholderPolicies_Delete(&cRightsholderPolicies)
+
+	cRightsholder := C.AE_LicenseRightsholder_New()
+	if cRightsholder == nil {
+		panic("out of memory")
+	}
+	defer C.AE_LicenseRightsholder_Delete(&cRightsholder)
+
+	cPolicy := C.AE_LicensePolicy_New()
+	if cPolicy == nil {
+		panic("out of memory")
+	}
+	defer C.AE_LicensePolicy_Delete(&cPolicy)
+
+	var cMatchesPos C.int = 0
+	var matches []*LicenseSearchMatch
+
+	for C.AE_LicenseSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
+		// Process segments.
+		var cQueryStart C.int64_t
+		var cQueryEnd C.int64_t
+		var cAssetStart C.int64_t
+		var cAssetEnd C.int64_t
+		var cSegmentsPos C.int = 0
+		var segments []*Segment
+
+		for C.AE_LicenseSearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cSegmentsPos) {
+			segments = append(segments, &Segment{
+				QueryStart: int64(cQueryStart),
+				QueryEnd:   int64(cQueryEnd),
+				AssetStart: int64(cAssetStart),
+				AssetEnd:   int64(cAssetEnd),
+			})
+		}
+
+		// Process rightsholder policies.
+		var cTerritory *C.char
+		var cTerritoryPoliciesPos C.int = 0
+		territoryPolicies := map[string][]*LicenseRightsholderPolicy{}
+
+		for C.AE_LicenseSearchMatch_NextTerritoryPolicies(cMatch, &cTerritory, cRightsholderPolicies, &cTerritoryPoliciesPos) {
+			var cRightsholderPoliciesPos C.int = 0
+			policies := make([]*LicenseRightsholderPolicy, 0)
+			for C.AE_LicenseRightsholderPolicies_Next(cRightsholderPolicies, cRightsholder, cPolicy, &cRightsholderPoliciesPos) {
+				policies = append(policies, &LicenseRightsholderPolicy{
+					Rightsholder: &LicenseRightsholder{
+						ID:    uint64(C.AE_LicenseRightsholder_GetID(cRightsholder)),
+						Title: C.GoString(C.AE_LicenseRightsholder_GetTitle(cRightsholder)),
+					},
+					Policy: &LicensePolicy{
+						ID:           uint64(C.AE_LicensePolicy_GetID(cPolicy)),
+						CategoryID:   uint64(C.AE_LicensePolicy_GetCategoryID(cPolicy)),
+						CategoryName: C.GoString(C.AE_LicensePolicy_GetCategoryName(cPolicy)),
+					},
+				})
+			}
+			territoryPolicies[C.GoString(cTerritory)] = policies
+		}
+
+		C.AE_LicenseSearchMatch_GetAsset(cMatch, cAsset)
+
+		matches = append(matches, &LicenseSearchMatch{
+			Asset:    newAssetFromC(cAsset),
+			Segments: segments,
+			Policies: territoryPolicies,
+		})
 	}
 
 	return &LicenseSearchResult{
 		LookupID: uint64(C.AE_LicenseSearchResult_GetLookupID(cResult)),
 		UGCID:    uint64(C.AE_LicenseSearchResult_GetUGCID(cResult)),
-		Policies: policies,
+		Matches:  matches,
 	}
 }

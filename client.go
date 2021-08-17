@@ -3,10 +3,9 @@
 package pexae
 
 // #cgo pkg-config: pexae
-// #include <pex/ae/sdk/c/client.h>
-// #include <pex/ae/sdk/c/license_search.h>
-// #include <pex/ae/sdk/c/metadata_search.h>
-// #include <pex/ae/sdk/c/asset_library.h>
+// #include <pex/ae/sdk/client.h>
+// #include <pex/ae/sdk/license_search.h>
+// #include <pex/ae/sdk/metadata_search.h>
 // #include <stdlib.h>
 import "C"
 import "unsafe"
@@ -16,11 +15,6 @@ import "unsafe"
 // automatically handles the connection and authentication with the
 // service.
 type Client struct {
-	// Initialized AssetLibrary struct that's using this client's
-	// resources. This should be used instead of initializing the
-	// struct directly.
-	AssetLibrary *AssetLibrary
-
 	// Initialized LicenseSearch struct that's using this client's
 	// resources. This should be used instead of initializing the
 	// struct directly.
@@ -63,11 +57,6 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 }
 
 func buildClient(cClient *C.AE_Client) *Client {
-	cAssetLibrary := C.AE_AssetLibrary_New(cClient)
-	if cAssetLibrary == nil {
-		panic("out of memory")
-	}
-
 	cLicenseSearch := C.AE_LicenseSearch_New(cClient)
 	if cLicenseSearch == nil {
 		panic("out of memory")
@@ -80,9 +69,6 @@ func buildClient(cClient *C.AE_Client) *Client {
 
 	return &Client{
 		c: cClient,
-		AssetLibrary: &AssetLibrary{
-			c: cAssetLibrary,
-		},
 		LicenseSearch: &LicenseSearch{
 			c: cLicenseSearch,
 		},
@@ -94,10 +80,10 @@ func buildClient(cClient *C.AE_Client) *Client {
 
 // Close closes all connections to the backend service and releases
 // the memory manually allocated by the core library. The
-// AssetLibrary, LicenseSearch and MetadataSearch fields must not be
+// LicenseSearch and MetadataSearch fields must not be
 // used after Close is called.
 func (x *Client) Close() error {
-	C.AE_AssetLibrary_Delete(&x.AssetLibrary.c)
+	C.AE_LicenseSearch_Delete(&x.LicenseSearch.c)
 	C.AE_MetadataSearch_Delete(&x.MetadataSearch.c)
 	C.AE_Client_Delete(&x.c)
 	return nil

@@ -2,7 +2,7 @@
 
 package pexae
 
-// #include <pex/ae/sdk/c/init.h>
+// #include <pex/ae/sdk/init.h>
 import "C"
 
 func init() {
