@@ -20,20 +20,12 @@ type LicenseSearchRequest struct {
 	Fingerprint *Fingerprint
 }
 
-type LicenseRightsholder struct {
-	ID    uint64
-	Title string
-}
-
-type LicensePolicy struct {
-	ID           uint64
-	CategoryID   uint64
-	CategoryName string
-}
-
-type LicenseRightsholderPolicy struct {
-	Rightsholder *LicenseRightsholder
-	Policy       *LicensePolicy
+type RightsholderPolicy struct {
+	RightsholderID     uint64
+	RightsholderTitle  string
+	PolicyID           uint64
+	PolicyCategoryID   int64
+	PolicyCategoryName string
 }
 
 type LicenseSearchMatch struct {
@@ -47,7 +39,7 @@ type LicenseSearchMatch struct {
 	// RightsholderPolicy. The territory codes conform to the ISO 3166-1
 	// alpha-2 standard. For more information visit
 	// https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2.
-	Policies map[string][]*LicenseRightsholderPolicy
+	Policies map[string][]*RightsholderPolicy
 }
 
 // This object is returned from LicenseSearchFuture.Get upon successful
@@ -165,23 +157,17 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 	}
 	defer C.AE_Asset_Delete(&cAsset)
 
-	cRightsholderPolicies := C.AE_LicenseRightsholderPolicies_New()
+	cRightsholderPolicies := C.AE_RightsholderPolicies_New()
 	if cRightsholderPolicies == nil {
 		panic("out of memory")
 	}
-	defer C.AE_LicenseRightsholderPolicies_Delete(&cRightsholderPolicies)
+	defer C.AE_RightsholderPolicies_Delete(&cRightsholderPolicies)
 
-	cRightsholder := C.AE_LicenseRightsholder_New()
-	if cRightsholder == nil {
+	cRightsholderPolicy := C.AE_RightsholderPolicy_New()
+	if cRightsholderPolicy == nil {
 		panic("out of memory")
 	}
-	defer C.AE_LicenseRightsholder_Delete(&cRightsholder)
-
-	cPolicy := C.AE_LicensePolicy_New()
-	if cPolicy == nil {
-		panic("out of memory")
-	}
-	defer C.AE_LicensePolicy_Delete(&cPolicy)
+	defer C.AE_RightsholderPolicy_Delete(&cRightsholderPolicy)
 
 	var cMatchesPos C.int = 0
 	var matches []*LicenseSearchMatch
@@ -207,22 +193,18 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 		// Process rightsholder policies.
 		var cTerritory *C.char
 		var cTerritoryPoliciesPos C.int = 0
-		territoryPolicies := map[string][]*LicenseRightsholderPolicy{}
+		territoryPolicies := map[string][]*RightsholderPolicy{}
 
 		for C.AE_LicenseSearchMatch_NextTerritoryPolicies(cMatch, &cTerritory, cRightsholderPolicies, &cTerritoryPoliciesPos) {
 			var cRightsholderPoliciesPos C.int = 0
-			policies := make([]*LicenseRightsholderPolicy, 0)
-			for C.AE_LicenseRightsholderPolicies_Next(cRightsholderPolicies, cRightsholder, cPolicy, &cRightsholderPoliciesPos) {
-				policies = append(policies, &LicenseRightsholderPolicy{
-					Rightsholder: &LicenseRightsholder{
-						ID:    uint64(C.AE_LicenseRightsholder_GetID(cRightsholder)),
-						Title: C.GoString(C.AE_LicenseRightsholder_GetTitle(cRightsholder)),
-					},
-					Policy: &LicensePolicy{
-						ID:           uint64(C.AE_LicensePolicy_GetID(cPolicy)),
-						CategoryID:   uint64(C.AE_LicensePolicy_GetCategoryID(cPolicy)),
-						CategoryName: C.GoString(C.AE_LicensePolicy_GetCategoryName(cPolicy)),
-					},
+			policies := make([]*RightsholderPolicy, 0)
+			for C.AE_RightsholderPolicies_Next(cRightsholderPolicies, cRightsholderPolicy, &cRightsholderPoliciesPos) {
+				policies = append(policies, &RightsholderPolicy{
+					RightsholderID:     uint64(C.AE_RightsholderPolicy_GetRightsholderID(cRightsholderPolicy)),
+					RightsholderTitle:  C.GoString(C.AE_RightsholderPolicy_GetRightsholderTitle(cRightsholderPolicy)),
+					PolicyID:           uint64(C.AE_RightsholderPolicy_GetPolicyID(cRightsholderPolicy)),
+					PolicyCategoryID:   int64(C.AE_RightsholderPolicy_GetPolicyCategoryID(cRightsholderPolicy)),
+					PolicyCategoryName: C.GoString(C.AE_RightsholderPolicy_GetPolicyCategoryName(cRightsholderPolicy)),
 				})
 			}
 			territoryPolicies[C.GoString(cTerritory)] = policies
