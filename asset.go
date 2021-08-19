@@ -36,15 +36,16 @@ const (
 // Asset contains all information about a particular asset. Searches performed
 // through the SDK match against assets representing copyrighted works.
 type Asset struct {
+	// The ID of the asset.
 	ID uint64
 
-	// One of: invalid, video, audio_recording, audio_composition, image, text.
+	// The type of the asset.
 	Type AssetType
 
-	// The name of the track recording for a given ISRC.
+	// The title of the asset.
 	Title string
 
-	// The names of the recording artists for a given ISRC.
+	// The artists who contributed to the asset.
 	Artists []string
 }
 

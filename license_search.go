@@ -21,18 +21,27 @@ type LicenseSearchRequest struct {
 }
 
 type RightsholderPolicy struct {
-	RightsholderID     uint64
-	RightsholderTitle  string
-	PolicyID           uint64
-	PolicyCategoryID   int64
+	// The ID of the rightsholder.
+	RightsholderID uint64
+
+	// The title of the rightsholder.
+	RightsholderTitle string
+
+	// The ID of the policy.
+	PolicyID uint64
+
+	// The ID of the category this policy belongs to.
+	PolicyCategoryID int64
+
+	// The name of the category this policy belongs to.
 	PolicyCategoryName string
 }
 
 type LicenseSearchMatch struct {
-	// An asset that matched with the query fingerprint.
+	// The asset whose fingerprint matches the query.
 	Asset *Asset
 
-	// A list of matching segments.
+	// The matching time segments on the query and asset respectively.
 	Segments []*Segment
 
 	// A map where the key is a territory and the value is
@@ -45,14 +54,13 @@ type LicenseSearchMatch struct {
 // This object is returned from LicenseSearchFuture.Get upon successful
 // completion.
 type LicenseSearchResult struct {
-	// An ID that uniquely identifies a particular search. Can be used for
-	// diagnostics.
+	// An ID that uniquely identifies a particular search. Can be used for diagnostics.
 	LookupID uint64
 
 	// An ID that uniquely identifies the UGC. It is used to provide UGC metadata back to Pex.
 	UGCID uint64
 
-	// A list of matches.
+	// The assets which the query matched against.
 	Matches []*LicenseSearchMatch
 }
 

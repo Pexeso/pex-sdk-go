@@ -23,11 +23,10 @@ type MetadataSearchRequest struct {
 // This object is returned from MetadataSearchFuture.Get upon successful
 // completion.
 type MetadataSearchResult struct {
-	// An ID that uniquely identifies a particular search. Can be used
-	// for diagnostics.
+	// An ID that uniquely identifies a particular search. Can be used for diagnostics.
 	LookupID uint64
 
-	// A list of matches.
+	// The assets which the query matched against.
 	Matches []*MetadataSearchMatch
 }
 
@@ -35,12 +34,10 @@ type MetadataSearchResult struct {
 // including information about the matched asset, and the matching
 // segments.
 type MetadataSearchMatch struct {
-	// An ID that uniquely identifies a matching asset. This can be used to
-	// retrieve detailed information about the asset using
-	// AssetLibrary.GetAsset.
+	// The asset whose fingerprint matches the query.
 	Asset *Asset
 
-	// A list of matching segments.
+	// The matching time segments on the query and asset respectively.
 	Segments []*Segment
 }
 
