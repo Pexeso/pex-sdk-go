@@ -116,18 +116,4 @@
 // The most significant difference between the searches currently is in the
 // results they return. See MetadataSearchResult and LicenseSearchResult for
 // more information.
-//
-//
-// Asset library
-//
-// You can use AssetLibrary to retrieve information about matched assets.
-//
-//     // After successful metadata search.
-//     for _, match := range res.Matches {
-//         asset, err := client.AssetLibrary.GetAsset(match.AssetID)
-//         if err != nil {
-//             panic(err)
-//         }
-//         fmt.Printf("%+v\n", asset)
-//     }
 package pexae
