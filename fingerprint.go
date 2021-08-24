@@ -3,7 +3,7 @@
 package pexae
 
 // #include <stdlib.h>
-// #include <pex/ae/sdk/c/fingerprint.h>
+// #include <pex/ae/sdk/fingerprint.h>
 import "C"
 import "unsafe"
 

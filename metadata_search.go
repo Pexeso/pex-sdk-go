@@ -2,7 +2,8 @@
 
 package pexae
 
-// #include <pex/ae/sdk/c/metadata_search.h>
+// #include <pex/ae/sdk/asset.h>
+// #include <pex/ae/sdk/metadata_search.h>
 // #include <stdlib.h>
 import "C"
 import (
@@ -22,14 +23,10 @@ type MetadataSearchRequest struct {
 // This object is returned from MetadataSearchFuture.Get upon successful
 // completion.
 type MetadataSearchResult struct {
-	// An ID that uniquely identifies a particular search. Can be used
-	// for diagnostics.
+	// An ID that uniquely identifies a particular search. Can be used for diagnostics.
 	LookupID uint64
 
-	// An ID that uniquely identifies the UGC. It is used to provide UGC metadata back to Pex.
-	UGCID uint64
-
-	// A list of matches.
+	// The assets which the query matched against.
 	Matches []*MetadataSearchMatch
 }
 
@@ -37,12 +34,10 @@ type MetadataSearchResult struct {
 // including information about the matched asset, and the matching
 // segments.
 type MetadataSearchMatch struct {
-	// An ID that uniquely identifies a matching asset. This can be used to
-	// retrieve detailed information about the asset using
-	// AssetLibrary.GetAsset.
-	AssetID uint64
+	// The asset whose fingerprint matches the query.
+	Asset *Asset
 
-	// A list of matching segments.
+	// The matching time segments on the query and asset respectively.
 	Segments []*Segment
 }
 
@@ -141,7 +136,13 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 	}
 	defer C.AE_MetadataSearchMatch_Delete(&cMatch)
 
-	var cMatchesPos C.size_t = 0
+	cAsset := C.AE_Asset_New()
+	if cAsset == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Asset_Delete(&cAsset)
+
+	var cMatchesPos C.int = 0
 	var matches []*MetadataSearchMatch
 
 	for C.AE_MetadataSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
@@ -149,7 +150,7 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 		var cQueryEnd C.int64_t
 		var cAssetStart C.int64_t
 		var cAssetEnd C.int64_t
-		var cSegmentsPos C.size_t = 0
+		var cSegmentsPos C.int = 0
 		var segments []*Segment
 
 		for C.AE_MetadataSearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cSegmentsPos) {
@@ -161,15 +162,16 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 			})
 		}
 
+		C.AE_MetadataSearchMatch_GetAsset(cMatch, cAsset)
+
 		matches = append(matches, &MetadataSearchMatch{
-			AssetID:  uint64(C.AE_MetadataSearchMatch_GetAssetID(cMatch)),
+			Asset:    newAssetFromC(cAsset),
 			Segments: segments,
 		})
 	}
 
 	return &MetadataSearchResult{
 		LookupID: uint64(C.AE_MetadataSearchResult_GetLookupID(cResult)),
-		UGCID:    uint64(C.AE_MetadataSearchResult_GetUGCID(cResult)),
 		Matches:  matches,
 	}
 }

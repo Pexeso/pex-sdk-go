@@ -1,8 +1,8 @@
 package pexae
 
 // #cgo pkg-config: pexae
-// #include <pex/ae/sdk/c/client.h>
-// #include <pex/ae/sdk/c/mockserver.h>
+// #include <pex/ae/sdk/client.h>
+// #include <pex/ae/sdk/mockserver.h>
 // #include <stdlib.h>
 import "C"
 import "unsafe"
