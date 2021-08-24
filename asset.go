@@ -14,6 +14,19 @@ import "C"
 //a CMO representing the song writer.
 type AssetType int
 
+func (x AssetType) String() string {
+	switch x {
+	case 1:
+		return "video"
+	case 2:
+		return "audio_recording"
+	case 3:
+		return "audio_composition"
+	default:
+		return "invalid"
+	}
+}
+
 const (
 	AssetTypeInvalid = AssetType(0)
 
@@ -22,15 +35,11 @@ const (
 
 	// An audio recording. Searched content may match a recording asset via 1-1
 	// audio matches, or by matching it's melody (e.g a cover song).
-	AssetTypeAUdioRecording = AssetType(2)
+	AssetTypeAudioRecording = AssetType(2)
 
 	// The composition representing the underlying lyrics and melody of a song.
 	// Composition Assets are linked to associated Recording Assets.
 	AssetTypeAudioComposition = AssetType(3)
-
-	AssetTypeImage = AssetType(4)
-
-	AssetTypeText = AssetType(5)
 )
 
 // Asset contains all information about a particular asset. Searches performed
