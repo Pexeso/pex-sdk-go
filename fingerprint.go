@@ -31,6 +31,12 @@ func NewFingerprintFromBuffer(buffer []byte) (*Fingerprint, error) {
 // LoadDumpedfingerprint loads a fingerprint previously serialized by
 // the Fingerprint.Dump() function.
 func LoadDumpedFingerprint(dump []byte) (*Fingerprint, error) {
+	status := C.AE_Status_New()
+	if status == nil {
+		panic("out of memory")
+	}
+
+	defer C.AE_Status_Delete(&status)
 	ft := C.AE_Fingerprint_New()
 	if ft == nil {
 		panic("out of memory")
@@ -46,8 +52,11 @@ func LoadDumpedFingerprint(dump []byte) (*Fingerprint, error) {
 	defer C.free(cDump)
 
 	C.AE_Buffer_Set(b, cDump, C.size_t(len(dump)))
-	C.AE_Fingerprint_Load(ft, b)
 
+	C.AE_Fingerprint_Load(ft, b, status)
+	if err := statusToError(status); err != nil {
+		return nil, err
+	}
 	return &Fingerprint{ft}, nil
 }
 
@@ -99,17 +108,26 @@ func (f *Fingerprint) Close() error {
 // Dump serializes the fingerprint into a byte slice so that it can be
 // stored on a disk or in a dabase. It can later be deserialized with
 // the LoadDumpedFingerprint() function.
-func (f *Fingerprint) Dump() []byte {
+func (f *Fingerprint) Dump() ([]byte, error) {
+	status := C.AE_Status_New()
+	if status == nil {
+		panic("out of memory")
+	}
+
+	defer C.AE_Status_Delete(&status)
 	b := C.AE_Buffer_New()
 	if b == nil {
 		panic("out of memory")
 	}
 	defer C.AE_Buffer_Delete(&b)
 
-	C.AE_Fingerprint_Dump(f.ft, b)
+	C.AE_Fingerprint_Dump(f.ft, b, status)
+	if err := statusToError(status); err != nil {
+		return nil, err
+	}
 
 	data := C.AE_Buffer_GetData(b)
 	size := C.int(C.AE_Buffer_GetSize(b))
 
-	return C.GoBytes(data, size)
+	return C.GoBytes(data, size), nil
 }

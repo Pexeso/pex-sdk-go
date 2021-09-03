@@ -21,9 +21,6 @@ func TestClientWithValidCredentials(t *testing.T) {
 	if client.LicenseSearch == nil {
 		t.Fatal("improperly initialized client, missing LicenseSearch")
 	}
-	if client.AssetLibrary == nil {
-		t.Fatal("improperly initialized client, missing AssetLibrary")
-	}
 }
 
 func TestClientWithInvalidCredentials(t *testing.T) {
