@@ -68,13 +68,18 @@ type LicenseSearchResult struct {
 // search. Instead of instantiating the class directly,
 // Client.LicenseSearch should be used.
 type LicenseSearch struct {
-	c *C.AE_LicenseSearch
+	embedded bool
+	c        *C.AE_LicenseSearch
 }
 
 // Starts a license search. This operation does not block until the
 // search is finished, it does however perform a network operation to
 // initiate the search on the backend service.
 func (x *LicenseSearch) Start(req *LicenseSearchRequest) (*LicenseSearchFuture, error) {
+	if !x.embedded {
+		return nil, errors.New("use Client.LicenseSearch instead of creating a new one")
+	}
+
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
 		panic("out of memory")

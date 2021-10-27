@@ -3,6 +3,7 @@
 package pexae
 
 // #cgo pkg-config: pexae
+// #include <pex/ae/sdk/init.h>
 // #include <pex/ae/sdk/client.h>
 // #include <pex/ae/sdk/license_search.h>
 // #include <pex/ae/sdk/metadata_search.h>
@@ -25,23 +26,38 @@ type Client struct {
 	// struct directly.
 	MetadataSearch *MetadataSearch
 
+	Fingerprinter *Fingerprinter
+
 	c *C.AE_Client
 }
 
 // NewClient initializes connections and authenticates with the
 // backend service with the credentials provided as arguments.
 func NewClient(clientID, clientSecret string) (*Client, error) {
-	cStatus := C.AE_Status_New()
-	if cStatus == nil {
-		panic("out of memory")
-	}
-	defer C.AE_Status_Delete(&cStatus)
-
 	cClientID := C.CString(clientID)
 	defer C.free(unsafe.Pointer(cClientID))
 
 	cClientSecret := C.CString(clientSecret)
 	defer C.free(unsafe.Pointer(cClientSecret))
+
+	var cErrMsg *C.char
+
+	C.AE_Init(cClientID, cClientSecret, &cErrMsg)
+	if cErrMsg != nil {
+		errMsg := C.GoString(cErrMsg)
+		C.free(unsafe.Pointer(cErrMsg))
+
+		return nil, &Error{
+			Code:    StatusNotInitialized,
+			Message: errMsg,
+		}
+	}
+
+	cStatus := C.AE_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Status_Delete(&cStatus)
 
 	cClient := C.AE_Client_New()
 	if cClient == nil {
@@ -53,28 +69,44 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 		C.free(unsafe.Pointer(cClient))
 		return nil, err
 	}
-	return buildClient(cClient), nil
+
+	client := &Client{
+		c: cClient,
+	}
+	initClient(client)
+	return client, nil
 }
 
-func buildClient(cClient *C.AE_Client) *Client {
-	cLicenseSearch := C.AE_LicenseSearch_New(cClient)
+func initClient(client *Client) {
+	// LicenseSearch
+	if client.LicenseSearch != nil {
+		C.AE_LicenseSearch_Delete(&client.LicenseSearch.c)
+	}
+	cLicenseSearch := C.AE_LicenseSearch_New(client.c)
 	if cLicenseSearch == nil {
 		panic("out of memory")
 	}
+	client.LicenseSearch = &LicenseSearch{
+		embedded: true,
+		c:        cLicenseSearch,
+	}
 
-	cMetadataSearch := C.AE_MetadataSearch_New(cClient)
+	// MetadataSearch
+	if client.MetadataSearch != nil {
+		C.AE_MetadataSearch_Delete(&client.MetadataSearch.c)
+	}
+	cMetadataSearch := C.AE_MetadataSearch_New(client.c)
 	if cMetadataSearch == nil {
 		panic("out of memory")
 	}
+	client.MetadataSearch = &MetadataSearch{
+		embedded: true,
+		c:        cMetadataSearch,
+	}
 
-	return &Client{
-		c: cClient,
-		LicenseSearch: &LicenseSearch{
-			c: cLicenseSearch,
-		},
-		MetadataSearch: &MetadataSearch{
-			c: cMetadataSearch,
-		},
+	// Fingerprinter
+	client.Fingerprinter = &Fingerprinter{
+		embedded: true,
 	}
 }
 
@@ -86,5 +118,6 @@ func (x *Client) Close() error {
 	C.AE_LicenseSearch_Delete(&x.LicenseSearch.c)
 	C.AE_MetadataSearch_Delete(&x.MetadataSearch.c)
 	C.AE_Client_Delete(&x.c)
+	C.AE_Cleanup()
 	return nil
 }

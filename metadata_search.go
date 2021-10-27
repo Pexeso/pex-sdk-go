@@ -45,13 +45,18 @@ type MetadataSearchMatch struct {
 // metadata search. Instead of instantiating the class directly,
 // Client.MetadataSearch should be used.
 type MetadataSearch struct {
-	c *C.AE_MetadataSearch
+	embedded bool
+	c        *C.AE_MetadataSearch
 }
 
 // Start starts a metadata search. This operation does not block until
 // the search is finished, it does however perform a network operation
 // to initiate the search on the backend service.
 func (x *MetadataSearch) Start(req *MetadataSearchRequest) (*MetadataSearchFuture, error) {
+	if !x.embedded {
+		return nil, errors.New("use Client.MetadataSearch instead of creating a new one")
+	}
+
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
 		panic("out of memory")

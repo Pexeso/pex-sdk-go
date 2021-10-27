@@ -1,35 +1,25 @@
+// Copyright 2020 Pexeso Inc. All rights reserved.
+
 package pexae
 
-// #cgo pkg-config: pexae
-// #include <pex/ae/sdk/client.h>
+// #include <pex/ae/sdk/init.h>
 // #include <pex/ae/sdk/mockserver.h>
 // #include <stdlib.h>
 import "C"
-import "unsafe"
 
-// NewMockserverClient creates a new instance of the client that will communicate with the mockserver using provided credentials for authentication.
-func NewMockserverClient(clientID, clientSecret string) (*Client, error) {
+// MockClient initializes the provided client to communicate with the mockserver.
+func MockClient(client *Client) error {
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
 		panic("out of memory")
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cClientID := C.CString(clientID)
-	defer C.free(unsafe.Pointer(cClientID))
-
-	cClientSecret := C.CString(clientSecret)
-	defer C.free(unsafe.Pointer(cClientSecret))
-
-	cClient := C.AE_Client_New()
-	if cClient == nil {
-		panic("out of memory")
-	}
-
-	C.AE_Mockserver_InitClient(cClient, cClientID, cClientSecret, cStatus)
+	C.AE_Mockserver_InitClient(client.c, nil, cStatus)
 	if err := statusToError(cStatus); err != nil {
-		C.free(unsafe.Pointer(cClient))
-		return nil, err
+		return err
 	}
-	return buildClient(cClient), nil
+
+	initClient(client)
+	return nil
 }
