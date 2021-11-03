@@ -38,7 +38,7 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("%d: %s", e.Code, e.Message)
 }
 
-func statusToError(status *C.AE_Status) *Error {
+func statusToError(status *C.AE_Status) error {
 	if !C.AE_Status_OK(status) {
 		return &Error{
 			Code:    StatusCode(C.AE_Status_GetCode(status)),

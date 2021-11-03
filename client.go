@@ -16,18 +16,6 @@ import "unsafe"
 // automatically handles the connection and authentication with the
 // service.
 type Client struct {
-	// Initialized LicenseSearch struct that's using this client's
-	// resources. This should be used instead of initializing the
-	// struct directly.
-	LicenseSearch *LicenseSearch
-
-	// Initialized MetadataSearch struct that's using this client's
-	// resources. This should be used instead of initializing the
-	// struct directly.
-	MetadataSearch *MetadataSearch
-
-	Fingerprinter *Fingerprinter
-
 	c *C.AE_Client
 }
 
@@ -70,44 +58,9 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 		return nil, err
 	}
 
-	client := &Client{
+	return &Client{
 		c: cClient,
-	}
-	initClient(client)
-	return client, nil
-}
-
-func initClient(client *Client) {
-	// LicenseSearch
-	if client.LicenseSearch != nil {
-		C.AE_LicenseSearch_Delete(&client.LicenseSearch.c)
-	}
-	cLicenseSearch := C.AE_LicenseSearch_New(client.c)
-	if cLicenseSearch == nil {
-		panic("out of memory")
-	}
-	client.LicenseSearch = &LicenseSearch{
-		embedded: true,
-		c:        cLicenseSearch,
-	}
-
-	// MetadataSearch
-	if client.MetadataSearch != nil {
-		C.AE_MetadataSearch_Delete(&client.MetadataSearch.c)
-	}
-	cMetadataSearch := C.AE_MetadataSearch_New(client.c)
-	if cMetadataSearch == nil {
-		panic("out of memory")
-	}
-	client.MetadataSearch = &MetadataSearch{
-		embedded: true,
-		c:        cMetadataSearch,
-	}
-
-	// Fingerprinter
-	client.Fingerprinter = &Fingerprinter{
-		embedded: true,
-	}
+	}, nil
 }
 
 // Close closes all connections to the backend service and releases
@@ -115,8 +68,6 @@ func initClient(client *Client) {
 // LicenseSearch and MetadataSearch fields must not be
 // used after Close is called.
 func (x *Client) Close() error {
-	C.AE_LicenseSearch_Delete(&x.LicenseSearch.c)
-	C.AE_MetadataSearch_Delete(&x.MetadataSearch.c)
 	C.AE_Client_Delete(&x.c)
 	C.AE_Cleanup()
 	return nil

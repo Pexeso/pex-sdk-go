@@ -3,6 +3,7 @@
 package pexae
 
 // #include <pex/ae/sdk/asset.h>
+// #include <pex/ae/sdk/client.h>
 // #include <pex/ae/sdk/license_search.h>
 // #include <stdlib.h>
 import "C"
@@ -62,54 +63,6 @@ type LicenseSearchResult struct {
 
 	// The assets which the query matched against.
 	Matches []*LicenseSearchMatch
-}
-
-// This class encapsulates all operations necessary to perform a license
-// search. Instead of instantiating the class directly,
-// Client.LicenseSearch should be used.
-type LicenseSearch struct {
-	embedded bool
-	c        *C.AE_LicenseSearch
-}
-
-// Starts a license search. This operation does not block until the
-// search is finished, it does however perform a network operation to
-// initiate the search on the backend service.
-func (x *LicenseSearch) Start(req *LicenseSearchRequest) (*LicenseSearchFuture, error) {
-	if !x.embedded {
-		return nil, errors.New("use Client.LicenseSearch instead of creating a new one")
-	}
-
-	cStatus := C.AE_Status_New()
-	if cStatus == nil {
-		panic("out of memory")
-	}
-	defer C.AE_Status_Delete(&cStatus)
-
-	cRequest := C.AE_LicenseSearchRequest_New()
-	if cRequest == nil {
-		panic("out of memory")
-	}
-	defer C.AE_LicenseSearchRequest_Delete(&cRequest)
-
-	cFuture := C.AE_LicenseSearchFuture_New()
-	if cFuture == nil {
-		panic("out of memory")
-	}
-
-	C.AE_LicenseSearchRequest_SetFingerprint(cRequest, req.Fingerprint.ft)
-
-	C.AE_LicenseSearch_Start(x.c, cRequest, cFuture, cStatus)
-	if err := statusToError(cStatus); err != nil {
-		// Delete the resource here to prevent leaking.
-		C.AE_LicenseSearchFuture_Delete(&cFuture)
-		return nil, err
-	}
-
-	return &LicenseSearchFuture{
-		LookupID: uint64(C.AE_LicenseSearchFuture_GetLookupID(cFuture)),
-		c:        cFuture,
-	}, nil
 }
 
 // LicenseSearchFuture is returned by the LicenseSearch.Start method
@@ -237,4 +190,40 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 		UGCID:    uint64(C.AE_LicenseSearchResult_GetUGCID(cResult)),
 		Matches:  matches,
 	}
+}
+
+// StartLicenseSearch starts a license search. This operation does not block until the
+// search is finished, it does however perform a network operation to
+// initiate the search on the backend service.
+func (x *Client) StartLicenseSearch(req *LicenseSearchRequest) (*LicenseSearchFuture, error) {
+	cStatus := C.AE_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Status_Delete(&cStatus)
+
+	cRequest := C.AE_LicenseSearchRequest_New()
+	if cRequest == nil {
+		panic("out of memory")
+	}
+	defer C.AE_LicenseSearchRequest_Delete(&cRequest)
+
+	cFuture := C.AE_LicenseSearchFuture_New()
+	if cFuture == nil {
+		panic("out of memory")
+	}
+
+	C.AE_LicenseSearchRequest_SetFingerprint(cRequest, req.Fingerprint.ft)
+
+	C.AE_Client_StartLicenseSearch(x.c, cRequest, cFuture, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		// Delete the resource here to prevent leaking.
+		C.AE_LicenseSearchFuture_Delete(&cFuture)
+		return nil, err
+	}
+
+	return &LicenseSearchFuture{
+		LookupID: uint64(C.AE_LicenseSearchFuture_GetLookupID(cFuture)),
+		c:        cFuture,
+	}, nil
 }

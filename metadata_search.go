@@ -3,6 +3,7 @@
 package pexae
 
 // #include <pex/ae/sdk/asset.h>
+// #include <pex/ae/sdk/client.h>
 // #include <pex/ae/sdk/metadata_search.h>
 // #include <stdlib.h>
 import "C"
@@ -39,54 +40,6 @@ type MetadataSearchMatch struct {
 
 	// The matching time segments on the query and asset respectively.
 	Segments []*Segment
-}
-
-// This class encapsulates all operations necessary to perform a
-// metadata search. Instead of instantiating the class directly,
-// Client.MetadataSearch should be used.
-type MetadataSearch struct {
-	embedded bool
-	c        *C.AE_MetadataSearch
-}
-
-// Start starts a metadata search. This operation does not block until
-// the search is finished, it does however perform a network operation
-// to initiate the search on the backend service.
-func (x *MetadataSearch) Start(req *MetadataSearchRequest) (*MetadataSearchFuture, error) {
-	if !x.embedded {
-		return nil, errors.New("use Client.MetadataSearch instead of creating a new one")
-	}
-
-	cStatus := C.AE_Status_New()
-	if cStatus == nil {
-		panic("out of memory")
-	}
-	defer C.AE_Status_Delete(&cStatus)
-
-	cRequest := C.AE_MetadataSearchRequest_New()
-	if cRequest == nil {
-		panic("out of memory")
-	}
-	defer C.AE_MetadataSearchRequest_Delete(&cRequest)
-
-	cFuture := C.AE_MetadataSearchFuture_New()
-	if cFuture == nil {
-		panic("out of memory")
-	}
-
-	C.AE_MetadataSearchRequest_SetFingerprint(cRequest, req.Fingerprint.ft)
-
-	C.AE_MetadataSearch_Start(x.c, cRequest, cFuture, cStatus)
-	if err := statusToError(cStatus); err != nil {
-		// Delete the resource here to prevent leaking.
-		C.AE_MetadataSearchFuture_Delete(&cFuture)
-		return nil, err
-	}
-
-	return &MetadataSearchFuture{
-		LookupID: uint64(C.AE_MetadataSearchFuture_GetLookupID(cFuture)),
-		c:        cFuture,
-	}, nil
 }
 
 // MetadataSearchFuture object is returned by the MetadataSearch.Start
@@ -179,4 +132,40 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 		LookupID: uint64(C.AE_MetadataSearchResult_GetLookupID(cResult)),
 		Matches:  matches,
 	}
+}
+
+// StartMetadataSearch starts a metadata search. This operation does not block until
+// the search is finished, it does however perform a network operation
+// to initiate the search on the backend service.
+func (x *Client) StartMetadataSearch(req *MetadataSearchRequest) (*MetadataSearchFuture, error) {
+	cStatus := C.AE_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Status_Delete(&cStatus)
+
+	cRequest := C.AE_MetadataSearchRequest_New()
+	if cRequest == nil {
+		panic("out of memory")
+	}
+	defer C.AE_MetadataSearchRequest_Delete(&cRequest)
+
+	cFuture := C.AE_MetadataSearchFuture_New()
+	if cFuture == nil {
+		panic("out of memory")
+	}
+
+	C.AE_MetadataSearchRequest_SetFingerprint(cRequest, req.Fingerprint.ft)
+
+	C.AE_Client_StartMetadataSearch(x.c, cRequest, cFuture, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		// Delete the resource here to prevent leaking.
+		C.AE_MetadataSearchFuture_Delete(&cFuture)
+		return nil, err
+	}
+
+	return &MetadataSearchFuture{
+		LookupID: uint64(C.AE_MetadataSearchFuture_GetLookupID(cFuture)),
+		c:        cFuture,
+	}, nil
 }
