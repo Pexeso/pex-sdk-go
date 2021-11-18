@@ -2,11 +2,15 @@
 
 package pexae
 
+// #include <pex/ae/sdk/lock.h>
 // #include <pex/ae/sdk/mockserver.h>
 import "C"
 
 // MockClient initializes the provided client to communicate with the mockserver.
 func MockClient(client *Client) error {
+	C.AE_Lock()
+	defer C.AE_Unlock()
+
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
 		panic("out of memory")

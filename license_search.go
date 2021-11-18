@@ -3,14 +3,12 @@
 package pexae
 
 // #include <pex/ae/sdk/asset.h>
+// #include <pex/ae/sdk/lock.h>
 // #include <pex/ae/sdk/client.h>
 // #include <pex/ae/sdk/license_search.h>
 // #include <stdlib.h>
 import "C"
-import (
-	"errors"
-	"sync"
-)
+import "unsafe"
 
 // Holds all data necessary to perform a license search. A search can only be
 // performed using a fingerprint, but additional parameters may be supported in
@@ -65,26 +63,20 @@ type LicenseSearchResult struct {
 	Matches []*LicenseSearchMatch
 }
 
-// LicenseSearchFuture is returned by the LicenseSearch.Start method
+// LicenseSearchFuture is returned by the Client.StartLicenseSearch method
 // and is used to retrieve a search result.
 type LicenseSearchFuture struct {
-	LookupID uint64
+	client *Client
 
-	c *C.AE_LicenseSearchFuture
-	m sync.Mutex
+	LookupID uint64
 }
 
 // Get blocks until the search result is ready and then returns it. It
 // also releases all the allocated resources, so it will return an
 // error when called multiple times.
 func (x *LicenseSearchFuture) Get() (*LicenseSearchResult, error) {
-	x.m.Lock()
-	defer x.m.Unlock()
-
-	if x.c == nil {
-		return nil, errors.New("already called")
-	}
-	defer x.close()
+	C.AE_Lock()
+	defer C.AE_Unlock()
 
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
@@ -98,16 +90,11 @@ func (x *LicenseSearchFuture) Get() (*LicenseSearchResult, error) {
 	}
 	defer C.AE_LicenseSearchResult_Delete(&cResult)
 
-	C.AE_LicenseSearchFuture_Get(x.c, cResult, cStatus)
+	C.AE_LicenseSearch_Check(x.client.c, C.uint64_t(x.LookupID), cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 	return x.processResult(cResult), nil
-}
-
-func (x *LicenseSearchFuture) close() {
-	C.AE_LicenseSearchFuture_Delete(&x.c)
-	x.c = nil
 }
 
 func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *LicenseSearchResult {
@@ -196,6 +183,9 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 // search is finished, it does however perform a network operation to
 // initiate the search on the backend service.
 func (x *Client) StartLicenseSearch(req *LicenseSearchRequest) (*LicenseSearchFuture, error) {
+	C.AE_Lock()
+	defer C.AE_Unlock()
+
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
 		panic("out of memory")
@@ -208,22 +198,30 @@ func (x *Client) StartLicenseSearch(req *LicenseSearchRequest) (*LicenseSearchFu
 	}
 	defer C.AE_LicenseSearchRequest_Delete(&cRequest)
 
-	cFuture := C.AE_LicenseSearchFuture_New()
-	if cFuture == nil {
+	cBuffer := C.AE_Buffer_New()
+	if cBuffer == nil {
 		panic("out of memory")
 	}
+	defer C.AE_Buffer_Delete(&cBuffer)
 
-	C.AE_LicenseSearchRequest_SetFingerprint(cRequest, req.Fingerprint.ft)
+	ftData := unsafe.Pointer(&req.Fingerprint.b[0])
+	ftSize := C.size_t(len(req.Fingerprint.b))
 
-	C.AE_Client_StartLicenseSearch(x.c, cRequest, cFuture, cStatus)
+	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
+
+	C.AE_LicenseSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
 	if err := statusToError(cStatus); err != nil {
-		// Delete the resource here to prevent leaking.
-		C.AE_LicenseSearchFuture_Delete(&cFuture)
+		return nil, err
+	}
+
+	var lookupID C.uint64_t
+	C.AE_LicenseSearch_Start(x.c, cRequest, &lookupID, cStatus)
+	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
 	return &LicenseSearchFuture{
-		LookupID: uint64(C.AE_LicenseSearchFuture_GetLookupID(cFuture)),
-		c:        cFuture,
+		client:   x,
+		LookupID: uint64(lookupID),
 	}, nil
 }

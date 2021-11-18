@@ -4,6 +4,7 @@ package pexae
 
 // #cgo pkg-config: pexae
 // #include <pex/ae/sdk/init.h>
+// #include <pex/ae/sdk/lock.h>
 // #include <pex/ae/sdk/client.h>
 // #include <pex/ae/sdk/license_search.h>
 // #include <pex/ae/sdk/metadata_search.h>
@@ -40,6 +41,9 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 			Message: errMsg,
 		}
 	}
+
+	C.AE_Lock()
+	defer C.AE_Unlock()
 
 	cStatus := C.AE_Status_New()
 	if cStatus == nil {
