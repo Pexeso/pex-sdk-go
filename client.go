@@ -29,16 +29,15 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 	cClientSecret := C.CString(clientSecret)
 	defer C.free(unsafe.Pointer(cClientSecret))
 
-	var cErrMsg *C.char
+	var cStatusCode C.int
+	var cStatusMessage *C.char
+	defer C.free(unsafe.Pointer(cStatusMessage))
 
-	C.AE_Init(cClientID, cClientSecret, &cErrMsg)
-	if cErrMsg != nil {
-		errMsg := C.GoString(cErrMsg)
-		C.free(unsafe.Pointer(cErrMsg))
-
+	C.AE_Init(cClientID, cClientSecret, &cStatusCode, &cStatusMessage)
+	if StatusCode(cStatusCode) != StatusOK {
 		return nil, &Error{
-			Code:    StatusNotInitialized,
-			Message: errMsg,
+			Code:    StatusCode(cStatusCode),
+			Message: C.GoString(cStatusMessage),
 		}
 	}
 
