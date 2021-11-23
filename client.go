@@ -30,14 +30,14 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 	defer C.free(unsafe.Pointer(cClientSecret))
 
 	var cStatusCode C.int
-	var cStatusMessage *C.char
-	defer C.free(unsafe.Pointer(cStatusMessage))
+	cStatusMessage := make([]C.char, 100)
+	cStatusMessageSize := C.size_t(len(cStatusMessage))
 
-	C.AE_Init(cClientID, cClientSecret, &cStatusCode, &cStatusMessage)
+	C.AE_Init(cClientID, cClientSecret, &cStatusCode, &cStatusMessage[0], cStatusMessageSize)
 	if StatusCode(cStatusCode) != StatusOK {
 		return nil, &Error{
 			Code:    StatusCode(cStatusCode),
-			Message: C.GoString(cStatusMessage),
+			Message: C.GoString(&cStatusMessage[0]),
 		}
 	}
 
@@ -71,7 +71,10 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 // LicenseSearch and MetadataSearch fields must not be
 // used after Close is called.
 func (x *Client) Close() error {
+	C.AE_Lock()
 	C.AE_Client_Delete(&x.c)
+	C.AE_Unlock()
+
 	C.AE_Cleanup()
 	return nil
 }
