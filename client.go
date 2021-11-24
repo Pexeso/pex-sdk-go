@@ -57,6 +57,7 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 
 	C.AE_Client_Init(cClient, cClientID, cClientSecret, cStatus)
 	if err := statusToError(cStatus); err != nil {
+		// TODO: if this fails, run AE_Cleanup
 		C.free(unsafe.Pointer(cClient))
 		return nil, err
 	}

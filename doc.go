@@ -14,6 +14,23 @@
 //     go get github.com/Pexeso/ae-sdk-go
 //
 //
+// Client
+//
+// Before you can do any operation with the SDK you need to initialize a client.
+//
+//     client, err := pexae.NewClient(clientID, clientSecret)
+//     if err != nil {
+//         panic(err)
+//     }
+//     defer client.Close()
+//
+// If you want to test the SDK using the mockserver you need to mock the client:
+//
+//     if err := pexae.MockClient(client); err != nil {
+//         panic(err)
+//     }
+//
+//
 // Fingerprinting
 //
 // A fingerprint is how the SDK identifies a piece of digital content.
@@ -23,25 +40,19 @@
 //
 // You can generate a fingerprint from a media file:
 //
-//     ft, err := pexae.NewFingerprintFromFile("/path/to/file.mp4")
+//     ft, err := client.FingerprintFile("/path/to/file.mp4")
 //     if err != nil {
 //         panic(err)
 //     }
-//     defer ft.Close()
-//
-//     // ...
 //
 // Or you can generate a fingerprint from a memory buffer:
 //
 //     b, _ := ioutil.ReadFile("/path/to/file.mp4")
 //
-//     ft, err := pexae.NewFingerprintFromBuffer(b)
+//     ft, err := pexae.FingerprintBuffer(b)
 //     if err != nil {
 //         panic(err)
 //     }
-//     defer ft.Close()
-//
-//     // ...
 //
 // Both the files and the memory buffers must be valid media content in
 // following formats:
@@ -57,27 +68,13 @@
 //
 // After the fingerprint is generated, you can use it to perform a metadata search.
 //
-//     // First, you need to initialize a client:
-//     client, err := pexae.NewClient(clientID, clientSecret)
-//     if err != nil {
-//         panic(err)
-//     }
-//     defer client.Close()
-//
-//     // You can also initialize a client that uses the mockserver:
-//     client2, err := pexae.NewMockserverClient(clientID, clientSecret)
-//     if err != nil {
-//         panic(err)
-//     }
-//     defer client2.Close()
-//
 //     // Build the request.
 //     req := &pexae.MetadataSearchRequest{
 //         Fingerprint: ft,
 //     }
 //
 //     // Start the search.
-//     fut, err := client.MetadataSearch.Start(req)
+//     fut, err := client.StartMetadataSearch(req)
 //     if err != nil {
 //         panic(err)
 //     }
@@ -106,7 +103,7 @@
 //     }
 //
 //     // Start the search.
-//     fut, err := client.LicenseSearch.Start(req)
+//     fut, err := client.StartLicenseSearch(req)
 //     if err != nil {
 //         panic(err)
 //     }
