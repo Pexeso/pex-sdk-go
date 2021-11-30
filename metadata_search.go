@@ -95,11 +95,13 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 		var cQueryEnd C.int64_t
 		var cAssetStart C.int64_t
 		var cAssetEnd C.int64_t
+		var cType C.int
 		var cSegmentsPos C.int = 0
 		var segments []*Segment
 
-		for C.AE_MetadataSearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cSegmentsPos) {
+		for C.AE_MetadataSearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cType, &cSegmentsPos) {
 			segments = append(segments, &Segment{
+				Type:       SegmentType(cType),
 				QueryStart: int64(cQueryStart),
 				QueryEnd:   int64(cQueryEnd),
 				AssetStart: int64(cAssetStart),
