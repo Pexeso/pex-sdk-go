@@ -54,23 +54,15 @@ type Asset struct {
 	// The title of the asset.
 	Title string
 
-	// The artists who contributed to the asset.
-	Artists []string
+	// The artist who contributed to the asset.
+	Artist string
 }
 
 func newAssetFromC(cAsset *C.AE_Asset) *Asset {
-	var cArtist *C.char
-	var cArtistsPos C.int = 0
-	var artists []string
-
-	for C.AE_Asset_NextArtist(cAsset, &cArtist, &cArtistsPos) {
-		artists = append(artists, C.GoString(cArtist))
-	}
-
 	return &Asset{
-		ID:      uint64(C.AE_Asset_GetID(cAsset)),
-		Type:    AssetType(C.AE_Asset_GetType(cAsset)),
-		Title:   C.GoString(C.AE_Asset_GetTitle(cAsset)),
-		Artists: artists,
+		ID:     uint64(C.AE_Asset_GetID(cAsset)),
+		Type:   AssetType(C.AE_Asset_GetType(cAsset)),
+		Title:  C.GoString(C.AE_Asset_GetTitle(cAsset)),
+		Artist: C.GoString(C.AE_Asset_GetArtist(cAsset)),
 	}
 }
