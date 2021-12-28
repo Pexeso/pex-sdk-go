@@ -54,7 +54,7 @@ Or you can generate a fingerprint from a memory buffer:
 ```go
 b, _ := ioutil.ReadFile("/path/to/file.mp4")
 
-ft, err := pexae.FingerprintBuffer(b)
+ft, err := client.FingerprintBuffer(b)
 if err != nil {
     panic(err)
 }
