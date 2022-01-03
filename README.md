@@ -9,7 +9,9 @@ Go bindings for the [Attribution Engine SDK](https://docs.ae.pex.com).
 
 You can install the Go language bindings like this:
 
-    go get github.com/Pexeso/ae-sdk-go
+    go get -u github.com/Pexeso/ae-sdk-go@main
+
+Setup your environment `AE_SERVICE_ADDRESS` to the value you wan tto use.
 
 
 ### Client
