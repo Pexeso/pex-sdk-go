@@ -97,6 +97,14 @@ func (x *LicenseSearchFuture) Get() (*LicenseSearchResult, error) {
 	}
 	defer C.AE_LicenseSearchCheckResult_Delete(&cResult)
 
+	cLookupID := C.CString(x.LookupID)
+	defer C.free(unsafe.Pointer(cLookupID))
+
+	C.AE_LicenseSearchCheckRequest_SetLookupID(cRequest, cLookupID, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		return nil, err
+	}
+
 	C.AE_LicenseSearch_Check(x.client.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
