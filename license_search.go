@@ -21,16 +21,16 @@ type LicenseSearchRequest struct {
 
 type RightsholderPolicy struct {
 	// The ID of the rightsholder.
-	RightsholderID uint64
+	RightsholderID string
 
 	// The title of the rightsholder.
 	RightsholderTitle string
 
 	// The ID of the policy.
-	PolicyID uint64
+	PolicyID string
 
 	// The ID of the category this policy belongs to.
-	PolicyCategoryID int64
+	PolicyCategoryID string
 
 	// The name of the category this policy belongs to.
 	PolicyCategoryName string
@@ -54,10 +54,10 @@ type LicenseSearchMatch struct {
 // completion.
 type LicenseSearchResult struct {
 	// An ID that uniquely identifies a particular search. Can be used for diagnostics.
-	LookupID uint64
+	LookupID string
 
 	// An ID that uniquely identifies the UGC. It is used to provide UGC metadata back to Pex.
-	UGCID uint64
+	UGCID string
 
 	// The assets which the query matched against.
 	Matches []*LicenseSearchMatch
@@ -68,7 +68,8 @@ type LicenseSearchResult struct {
 type LicenseSearchFuture struct {
 	client *Client
 
-	LookupID uint64
+	UGCID    string
+	LookupID string
 }
 
 // Get blocks until the search result is ready and then returns it. It
@@ -84,20 +85,26 @@ func (x *LicenseSearchFuture) Get() (*LicenseSearchResult, error) {
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cResult := C.AE_LicenseSearchResult_New()
+	cRequest := C.AE_LicenseSearchCheckRequest_New()
+	if cRequest == nil {
+		panic("out of memory")
+	}
+	defer C.AE_LicenseSearchCheckRequest_Delete(&cRequest)
+
+	cResult := C.AE_LicenseSearchCheckResult_New()
 	if cResult == nil {
 		panic("out of memory")
 	}
-	defer C.AE_LicenseSearchResult_Delete(&cResult)
+	defer C.AE_LicenseSearchCheckResult_Delete(&cResult)
 
-	C.AE_LicenseSearch_Check(x.client.c, C.uint64_t(x.LookupID), cResult, cStatus)
+	C.AE_LicenseSearch_Check(x.client.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 	return x.processResult(cResult), nil
 }
 
-func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *LicenseSearchResult {
+func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchCheckResult) *LicenseSearchResult {
 	cMatch := C.AE_LicenseSearchMatch_New()
 	if cMatch == nil {
 		panic("out of memory")
@@ -125,7 +132,7 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 	var cMatchesPos C.int = 0
 	var matches []*LicenseSearchMatch
 
-	for C.AE_LicenseSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
+	for C.AE_LicenseSearchCheckResult_NextMatch(cResult, cMatch, &cMatchesPos) {
 		// Process segments.
 		var cQueryStart C.int64_t
 		var cQueryEnd C.int64_t
@@ -155,10 +162,10 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 			policies := make([]*RightsholderPolicy, 0)
 			for C.AE_RightsholderPolicies_Next(cRightsholderPolicies, cRightsholderPolicy, &cRightsholderPoliciesPos) {
 				policies = append(policies, &RightsholderPolicy{
-					RightsholderID:     uint64(C.AE_RightsholderPolicy_GetRightsholderID(cRightsholderPolicy)),
+					RightsholderID:     C.GoString(C.AE_RightsholderPolicy_GetRightsholderID(cRightsholderPolicy)),
 					RightsholderTitle:  C.GoString(C.AE_RightsholderPolicy_GetRightsholderTitle(cRightsholderPolicy)),
-					PolicyID:           uint64(C.AE_RightsholderPolicy_GetPolicyID(cRightsholderPolicy)),
-					PolicyCategoryID:   int64(C.AE_RightsholderPolicy_GetPolicyCategoryID(cRightsholderPolicy)),
+					PolicyID:           C.GoString(C.AE_RightsholderPolicy_GetPolicyID(cRightsholderPolicy)),
+					PolicyCategoryID:   C.GoString(C.AE_RightsholderPolicy_GetPolicyCategoryID(cRightsholderPolicy)),
 					PolicyCategoryName: C.GoString(C.AE_RightsholderPolicy_GetPolicyCategoryName(cRightsholderPolicy)),
 				})
 			}
@@ -175,8 +182,8 @@ func (x *LicenseSearchFuture) processResult(cResult *C.AE_LicenseSearchResult) *
 	}
 
 	return &LicenseSearchResult{
-		LookupID: uint64(C.AE_LicenseSearchResult_GetLookupID(cResult)),
-		UGCID:    uint64(C.AE_LicenseSearchResult_GetUGCID(cResult)),
+		LookupID: C.GoString(C.AE_LicenseSearchCheckResult_GetLookupID(cResult)),
+		UGCID:    C.GoString(C.AE_LicenseSearchCheckResult_GetUGCID(cResult)),
 		Matches:  matches,
 	}
 }
@@ -194,11 +201,17 @@ func (x *Client) StartLicenseSearch(req *LicenseSearchRequest) (*LicenseSearchFu
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cRequest := C.AE_LicenseSearchRequest_New()
+	cRequest := C.AE_LicenseSearchStartRequest_New()
 	if cRequest == nil {
 		panic("out of memory")
 	}
-	defer C.AE_LicenseSearchRequest_Delete(&cRequest)
+	defer C.AE_LicenseSearchStartRequest_Delete(&cRequest)
+
+	cResult := C.AE_LicenseSearchStartResult_New()
+	if cResult == nil {
+		panic("out of memory")
+	}
+	defer C.AE_LicenseSearchStartResult_Delete(&cResult)
 
 	cBuffer := C.AE_Buffer_New()
 	if cBuffer == nil {
@@ -211,19 +224,19 @@ func (x *Client) StartLicenseSearch(req *LicenseSearchRequest) (*LicenseSearchFu
 
 	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
 
-	C.AE_LicenseSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
+	C.AE_LicenseSearchStartRequest_SetFingerprint(cRequest, cBuffer, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
-	var lookupID C.uint64_t
-	C.AE_LicenseSearch_Start(x.c, cRequest, &lookupID, cStatus)
+	C.AE_LicenseSearch_Start(x.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
 	return &LicenseSearchFuture{
 		client:   x,
-		LookupID: uint64(lookupID),
+		LookupID: C.GoString(C.AE_LicenseSearchStartResult_GetLookupID(cResult)),
+		UGCID:    C.GoString(C.AE_LicenseSearchStartResult_GetUGCID(cResult)),
 	}, nil
 }

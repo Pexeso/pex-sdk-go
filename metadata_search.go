@@ -23,7 +23,7 @@ type MetadataSearchRequest struct {
 // completion.
 type MetadataSearchResult struct {
 	// An ID that uniquely identifies a particular search. Can be used for diagnostics.
-	LookupID uint64
+	LookupID string
 
 	// The assets which the query matched against.
 	Matches []*MetadataSearchMatch
@@ -45,7 +45,7 @@ type MetadataSearchMatch struct {
 type MetadataSearchFuture struct {
 	client *Client
 
-	LookupID uint64
+	LookupID string
 }
 
 // Get blocks until the search result is ready and then returns it. It
@@ -61,20 +61,34 @@ func (x *MetadataSearchFuture) Get() (*MetadataSearchResult, error) {
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cResult := C.AE_MetadataSearchResult_New()
+	cRequest := C.AE_MetadataSearchCheckRequest_New()
+	if cRequest == nil {
+		panic("out of memory")
+	}
+	defer C.AE_MetadataSearchCheckRequest_Delete(&cRequest)
+
+	cResult := C.AE_MetadataSearchCheckResult_New()
 	if cResult == nil {
 		panic("out of memory")
 	}
-	defer C.AE_MetadataSearchResult_Delete(&cResult)
+	defer C.AE_MetadataSearchCheckResult_Delete(&cResult)
 
-	C.AE_MetadataSearch_Check(x.client.c, C.uint64_t(x.LookupID), cResult, cStatus)
+	cLookupID := C.CString(x.LookupID)
+	defer C.free(unsafe.Pointer(cLookupID))
+
+	C.AE_MetadataSearchCheckRequest_SetLookupID(cRequest, cLookupID, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		return nil, err
+	}
+
+	C.AE_MetadataSearch_Check(x.client.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 	return x.processResult(cResult), nil
 }
 
-func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult) *MetadataSearchResult {
+func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchCheckResult) *MetadataSearchResult {
 	cMatch := C.AE_MetadataSearchMatch_New()
 	if cMatch == nil {
 		panic("out of memory")
@@ -90,7 +104,7 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 	var cMatchesPos C.int = 0
 	var matches []*MetadataSearchMatch
 
-	for C.AE_MetadataSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
+	for C.AE_MetadataSearchCheckResult_NextMatch(cResult, cMatch, &cMatchesPos) {
 		var cQueryStart C.int64_t
 		var cQueryEnd C.int64_t
 		var cAssetStart C.int64_t
@@ -118,7 +132,7 @@ func (x *MetadataSearchFuture) processResult(cResult *C.AE_MetadataSearchResult)
 	}
 
 	return &MetadataSearchResult{
-		LookupID: uint64(C.AE_MetadataSearchResult_GetLookupID(cResult)),
+		LookupID: C.GoString(C.AE_MetadataSearchCheckResult_GetLookupID(cResult)),
 		Matches:  matches,
 	}
 }
@@ -136,11 +150,17 @@ func (x *Client) StartMetadataSearch(req *MetadataSearchRequest) (*MetadataSearc
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cRequest := C.AE_MetadataSearchRequest_New()
+	cRequest := C.AE_MetadataSearchStartRequest_New()
 	if cRequest == nil {
 		panic("out of memory")
 	}
-	defer C.AE_MetadataSearchRequest_Delete(&cRequest)
+	defer C.AE_MetadataSearchStartRequest_Delete(&cRequest)
+
+	cResult := C.AE_MetadataSearchStartResult_New()
+	if cResult == nil {
+		panic("out of memory")
+	}
+	defer C.AE_MetadataSearchStartResult_Delete(&cResult)
 
 	cBuffer := C.AE_Buffer_New()
 	if cBuffer == nil {
@@ -153,19 +173,18 @@ func (x *Client) StartMetadataSearch(req *MetadataSearchRequest) (*MetadataSearc
 
 	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
 
-	C.AE_MetadataSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
+	C.AE_MetadataSearchStartRequest_SetFingerprint(cRequest, cBuffer, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
-	var lookupID C.uint64_t
-	C.AE_MetadataSearch_Start(x.c, cRequest, &lookupID, cStatus)
+	C.AE_MetadataSearch_Start(x.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
 	return &MetadataSearchFuture{
 		client:   x,
-		LookupID: uint64(lookupID),
+		LookupID: C.GoString(C.AE_MetadataSearchStartResult_GetLookupID(cResult)),
 	}, nil
 }
