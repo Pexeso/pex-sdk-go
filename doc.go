@@ -11,7 +11,7 @@
 //
 // You can install the Go language bindings like this:
 //
-//     go get github.com/Pexeso/ae-sdk-go/v2
+//     go get github.com/Pexeso/ae-sdk-go
 //
 //
 // Client
