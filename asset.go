@@ -11,7 +11,7 @@ import "C"
 // all three asset types. E.g, a music video uploaded could match to a
 // Video Asset controlled by a record label, a Recording Asset
 // controlled by the same label, and a Composition Asset controlled by
-//a CMO representing the song writer.
+// a CMO representing the song writer.
 type AssetType int
 
 func (x AssetType) String() string {
@@ -46,7 +46,7 @@ const (
 // through the SDK match against assets representing copyrighted works.
 type Asset struct {
 	// The ID of the asset.
-	ID uint64
+	ID string
 
 	// The type of the asset.
 	Type AssetType
@@ -60,7 +60,7 @@ type Asset struct {
 
 func newAssetFromC(cAsset *C.AE_Asset) *Asset {
 	return &Asset{
-		ID:     uint64(C.AE_Asset_GetID(cAsset)),
+		ID:     C.GoString(C.AE_Asset_GetID(cAsset)),
 		Type:   AssetType(C.AE_Asset_GetType(cAsset)),
 		Title:  C.GoString(C.AE_Asset_GetTitle(cAsset)),
 		Artist: C.GoString(C.AE_Asset_GetArtist(cAsset)),
