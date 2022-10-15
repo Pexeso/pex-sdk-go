@@ -181,3 +181,37 @@ func (x *Client) StartPrivateSearch(req *PrivateSearchRequest) (*PrivateSearchFu
 		LookupID: C.GoString(C.AE_PrivateSearchStartResult_GetLookupID(cResult)),
 	}, nil
 }
+
+// IngestPrivateSearchAsset ingests a fingerprint into the private search
+// catalog. The catalog is determined from the authentication credentials used
+// when initializing the client. If you want to ingest into multiple catalogs
+// within one application, you need to use multiple clients. The id parameter
+// identifies the fingerprint and will be returned during search to identify
+// the matched asset.
+func (x *Client) IngestPrivateSearchAsset(id string, ft *Fingerprint) error {
+	C.AE_Lock()
+	defer C.AE_Unlock()
+
+	cStatus := C.AE_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Status_Delete(&cStatus)
+
+	cID := C.CString(id)
+	defer C.free(unsafe.Pointer(cID))
+
+	cBuffer := C.AE_Buffer_New()
+	if cBuffer == nil {
+		panic("out of memory")
+	}
+	defer C.AE_Buffer_Delete(&cBuffer)
+
+	ftData := unsafe.Pointer(&ft.b[0])
+	ftSize := C.size_t(len(ft.b))
+
+	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
+
+	C.AE_PrivateSearch_Ingest(x.c, cID, cBuffer, cStatus)
+	return statusToError(cStatus)
+}
