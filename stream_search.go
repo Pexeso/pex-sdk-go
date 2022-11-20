@@ -60,7 +60,8 @@ type StreamEvent struct {
 }
 
 type StreamSearch struct {
-	c *C.AE_StreamSearch
+	c       *C.AE_StreamSearch
+	stopped bool
 }
 
 func (x *Client) StartStreamSearch(url string) (*StreamSearch, error) {
@@ -92,8 +93,15 @@ func (x *Client) StartStreamSearch(url string) (*StreamSearch, error) {
 	}, nil
 }
 
-func (x *StreamSearch) Close() {
+func (x *StreamSearch) Stop() {
 	C.AE_StreamSearch_EndSearch(x.c)
+	x.stopped = true
+}
+
+func (x *StreamSearch) Close() {
+	if !x.stopped {
+		C.AE_StreamSearch_EndSearch(x.c)
+	}
 	C.AE_StreamSearch_Delete(&x.c)
 }
 
