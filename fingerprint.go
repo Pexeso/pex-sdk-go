@@ -12,10 +12,10 @@ import "unsafe"
 type FingerprintType int
 
 const (
-	Video  FingerprintType = 1
-	Audio  FingerprintType = 2
-	Melody FingerprintType = 4
-	All    FingerprintType = Video | Audio | Melody
+	FingerprintTypeVideo  FingerprintType = 1
+	FingerprintTypeAudio  FingerprintType = 2
+	FingerprintTypeMelody FingerprintType = 4
+	FingerprintTypeAll    FingerprintType = FingerprintTypeVideo | FingerprintTypeAudio | FingerprintTypeMelody
 )
 
 // Fingerprint is how the SDK identifies a piece of digital content.
