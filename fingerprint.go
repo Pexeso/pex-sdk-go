@@ -66,7 +66,7 @@ func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprin
 		cFile := C.CString(string(input))
 		defer C.free(unsafe.Pointer(cFile))
 
-		C.AE_Fingerprint_File(cFile, ft, status, C.int(typ))
+		C.AE_Fingerprint_File_For_Types(cFile, ft, status, C.int(typ))
 	} else {
 		buf := C.AE_Buffer_New()
 		if buf == nil {
@@ -78,7 +78,7 @@ func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprin
 		size := C.size_t(len(input))
 
 		C.AE_Buffer_Set(buf, data, size)
-		C.AE_Fingerprint_Buffer(buf, ft, status, C.int(typ))
+		C.AE_Fingerprint_Buffer_For_Types(buf, ft, status, C.int(typ))
 	}
 
 	if err := statusToError(status); err != nil {
