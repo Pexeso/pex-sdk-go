@@ -34,16 +34,29 @@ func NewFingerprint(b []byte) *Fingerprint {
 
 // FingerprintFile is used to generate a fingerprint from a
 // file stored on a disk. The path parameter must be a path
-// to a valid file in supported format. The typ parameter
-// specifies which types of fingerprints to create.
-func (x *Client) FingerprintFile(path string, typ FingerprintType) (*Fingerprint, error) {
+// to a valid file in supported format.
+func (x *Client) FingerprintFile(path string) (*Fingerprint, error) {
+	return x.FingerprintFileForTypes(path, FingerprintTypeAll)
+}
+
+// FingerprintFileForTypes is used to generate a fingerprint from a
+// file stored on a disk. The path parameter must be a path to a
+// valid file in supported format. The typ parameter specifies
+// which types of fingerprints to create.
+func (x *Client) FingerprintFileForTypes(path string, typ FingerprintType) (*Fingerprint, error) {
 	return newFingerprint([]byte(path), true, typ)
 }
 
 // FingerprintBuffer is used to generate a fingerprint from a
+// media file loaded in memory as a byte slice.
+func (x *Client) FingerprintBuffer(buffer []byte) (*Fingerprint, error) {
+	return x.FingerprintBufferForTypes(buffer, FingerprintTypeAll)
+}
+
+// FingerprintBufferForTypes is used to generate a fingerprint from a
 // media file loaded in memory as a byte slice. The typ parameter
 // specifies which types of fingerprints to create.
-func (x *Client) FingerprintBuffer(buffer []byte, typ FingerprintType) (*Fingerprint, error) {
+func (x *Client) FingerprintBufferForTypes(buffer []byte, typ FingerprintType) (*Fingerprint, error) {
 	return newFingerprint(buffer, false, typ)
 }
 
