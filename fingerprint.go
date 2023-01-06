@@ -15,7 +15,7 @@ const (
 	FingerprintTypeVideo  FingerprintType = 1
 	FingerprintTypeAudio  FingerprintType = 2
 	FingerprintTypeMelody FingerprintType = 4
-	FingerprintTypeAll    FingerprintType = FingerprintTypeVideo | FingerprintTypeAudio | FingerprintTypeMelody
+	FingerprintTypeAll                    = FingerprintTypeVideo | FingerprintTypeAudio | FingerprintTypeMelody
 )
 
 // Fingerprint is how the SDK identifies a piece of digital content.
@@ -34,30 +34,30 @@ func NewFingerprint(b []byte) *Fingerprint {
 
 // FingerprintFile is used to generate a fingerprint from a
 // file stored on a disk. The path parameter must be a path
-// to a valid file in supported format.
-func (x *Client) FingerprintFile(path string) (*Fingerprint, error) {
-	return x.FingerprintFileForTypes(path, FingerprintTypeAll)
-}
-
-// FingerprintFileForTypes is used to generate a fingerprint from a
-// file stored on a disk. The path parameter must be a path to a
-// valid file in supported format. The typ parameter specifies
-// which types of fingerprints to create.
-func (x *Client) FingerprintFileForTypes(path string, typ FingerprintType) (*Fingerprint, error) {
-	return newFingerprint([]byte(path), true, typ)
+// to a valid file in supported format. The types parameter
+// specifies which types of fingerprints to create. If not
+// types are provided, FingerprintTypeAll is assumed.
+func (x *Client) FingerprintFile(path string, types ...FingerprintType) (*Fingerprint, error) {
+	return newFingerprint([]byte(path), true, reduceTypes(types))
 }
 
 // FingerprintBuffer is used to generate a fingerprint from a
-// media file loaded in memory as a byte slice.
-func (x *Client) FingerprintBuffer(buffer []byte) (*Fingerprint, error) {
-	return x.FingerprintBufferForTypes(buffer, FingerprintTypeAll)
+// media file loaded in memory as a byte slice. The types parameter
+// specifies which types of fingerprints to create. If not
+// types are provided, FingerprintTypeAll is assumed.
+func (x *Client) FingerprintBuffer(buffer []byte, types ...FingerprintType) (*Fingerprint, error) {
+	return newFingerprint(buffer, false, reduceTypes(types))
 }
 
-// FingerprintBufferForTypes is used to generate a fingerprint from a
-// media file loaded in memory as a byte slice. The typ parameter
-// specifies which types of fingerprints to create.
-func (x *Client) FingerprintBufferForTypes(buffer []byte, typ FingerprintType) (*Fingerprint, error) {
-	return newFingerprint(buffer, false, typ)
+func reduceTypes(in []FingerprintType) (out FingerprintType) {
+	if len(in) == 0 {
+		return FingerprintTypeAll
+	}
+
+	for _, t := range in {
+		out = out | t
+	}
+	return out
 }
 
 func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprint, error) {
