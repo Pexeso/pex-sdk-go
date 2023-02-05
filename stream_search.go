@@ -55,6 +55,7 @@ type StreamEvent struct {
 	Type           StreamEventType
 	Err            error
 	Asset          *Asset
+	SegmentType    SegmentType
 	QueryTimestamp int64
 	AssetTimestamp int64
 }
@@ -123,8 +124,14 @@ func (x *StreamSearch) NextEvent() (*StreamEvent, error) {
 		return nil, err
 	}
 
+	queryTimestamp := int64(C.AE_StreamSearchEvent_GetQueryTimestamp(cEvent, cStatus))
+	if err := statusToError(cStatus); err != nil {
+		return nil, err
+	}
+
 	event := &StreamEvent{
-		Type: StreamEventType(C.AE_StreamSearchEvent_GetType(cEvent)),
+		Type:           StreamEventType(C.AE_StreamSearchEvent_GetType(cEvent)),
+		QueryTimestamp: queryTimestamp,
 	}
 
 	switch event.Type {
@@ -164,7 +171,7 @@ func getEventAsset(event *StreamEvent, cEvent *C.AE_StreamSearchEvent, cStatus *
 		panic(err)
 	}
 
-	queryTimestamp := C.AE_StreamSearchEvent_GetQueryTimestamp(cEvent, cStatus)
+	segmentType := C.AE_StreamSearchEvent_GetSegmentType(cEvent, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		panic(err)
 	}
@@ -175,6 +182,6 @@ func getEventAsset(event *StreamEvent, cEvent *C.AE_StreamSearchEvent, cStatus *
 	}
 
 	event.Asset = newAssetFromC(cAsset)
-	event.QueryTimestamp = int64(queryTimestamp)
+	event.SegmentType = SegmentType(segmentType)
 	event.AssetTimestamp = int64(assetTimestamp)
 }
