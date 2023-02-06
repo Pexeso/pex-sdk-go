@@ -75,12 +75,14 @@ func newClient(typ C.AE_ClientType, clientID, clientSecret string) (*C.AE_Client
 }
 
 // Close closes all connections to the backend service and releases
-// the memory manually allocated by the core library. The
-// LicenseSearch and MetadataSearch fields must not be
-// used after Close is called.
+// the memory manually allocated by the core library.
 func (x *Client) Close() error {
+	return closeClient(&x.c)
+}
+
+func closeClient(c **C.AE_Client) error {
 	C.AE_Lock()
-	C.AE_Client_Delete(&x.c)
+	C.AE_Client_Delete(c)
 	C.AE_Unlock()
 
 	C.AE_Cleanup()

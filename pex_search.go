@@ -158,6 +158,12 @@ func NewPexSearchClient(clientID, clientSecret string) (*PexSearchClient, error)
 	}, nil
 }
 
+// Close closes all connections to the backend service and releases
+// the memory manually allocated by the core library.
+func (x *PexSearchClient) Close() error {
+	return closeClient(&x.c)
+}
+
 // StartSearch starts a Pex search. This operation does not block until
 // the search is finished, it does however perform a network operation
 // to initiate the search on the backend service.
