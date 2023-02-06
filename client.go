@@ -32,6 +32,10 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 	}, nil
 }
 
+func (x *Client) getCClient() *C.AE_Client {
+	return x.c
+}
+
 func newClient(typ C.AE_ClientType, clientID, clientSecret string) (*C.AE_Client, error) {
 	cClientID := C.CString(clientID)
 	defer C.free(unsafe.Pointer(cClientID))
