@@ -29,12 +29,35 @@ type PexSearchResult struct {
 	Matches []*PexSearchMatch
 }
 
+type PexSearchAsset struct {
+	// The title of the asset.
+	Title string
+
+	// The artist who contributed to the asset.
+	Artist string
+
+	// International Standard Recording Code.
+	ISRC string
+
+	// The total duration of the asset in seconds.
+	Duration float32
+}
+
+func newPexSearchAssetFromC(cAsset *C.AE_Asset) *PexSearchAsset {
+	return &PexSearchAsset{
+		Title:    C.GoString(C.AE_Asset_GetTitle(cAsset)),
+		Artist:   C.GoString(C.AE_Asset_GetArtist(cAsset)),
+		ISRC:     C.GoString(C.AE_Asset_GetISRC(cAsset)),
+		Duration: float32(C.AE_Asset_GetDuration(cAsset)),
+	}
+}
+
 // PexSearchMatch contains detailed information about the match,
 // including information about the matched asset, and the matching
 // segments.
 type PexSearchMatch struct {
 	// The asset whose fingerprint matches the query.
-	Asset *Asset
+	Asset *PexSearchAsset
 
 	// The matching time segments on the query and asset respectively.
 	Segments []*Segment
@@ -129,7 +152,7 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 		}
 
 		matches = append(matches, &PexSearchMatch{
-			Asset:    newAssetFromC(cAsset),
+			Asset:    newPexSearchAssetFromC(cAsset),
 			Segments: segments,
 		})
 	}
