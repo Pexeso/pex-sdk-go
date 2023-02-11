@@ -168,6 +168,8 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 // automatically handles the connection and authentication with the
 // service.
 type PexSearchClient struct {
+	fingerprinter
+
 	c *C.AE_Client
 }
 

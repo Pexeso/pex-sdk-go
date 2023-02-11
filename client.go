@@ -17,6 +17,8 @@ import "unsafe"
 // automatically handles the connection and authentication with the
 // service.
 type Client struct {
+	fingerprinter
+
 	c *C.AE_Client
 }
 
