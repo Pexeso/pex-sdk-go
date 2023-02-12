@@ -99,10 +99,7 @@ func (x *PexSearchFuture) Get() (*PexSearchResult, error) {
 	cLookupID := C.CString(x.LookupID)
 	defer C.free(unsafe.Pointer(cLookupID))
 
-	C.AE_CheckSearchRequest_SetLookupID(cRequest, cLookupID, cStatus)
-	if err := statusToError(cStatus); err != nil {
-		return nil, err
-	}
+	C.AE_CheckSearchRequest_SetLookupID(cRequest, cLookupID)
 
 	C.AE_CheckSearch(x.client.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
