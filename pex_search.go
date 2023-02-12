@@ -68,7 +68,8 @@ type PexSearchMatch struct {
 type PexSearchFuture struct {
 	client *PexSearchClient
 
-	LookupID string
+	LookupID      string
+	QueryDuration float32
 }
 
 // Get blocks until the search result is ready and then returns it. It
@@ -240,7 +241,8 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 	}
 
 	return &PexSearchFuture{
-		client:   x,
-		LookupID: C.GoString(C.AE_StartSearchResult_GetLookupID(cResult)),
+		client:        x,
+		LookupID:      C.GoString(C.AE_StartSearchResult_GetLookupID(cResult)),
+		QueryDuration: float32(C.AE_StartSearchResult_GetQueryDuration(cResult)),
 	}, nil
 }
