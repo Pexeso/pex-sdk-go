@@ -39,6 +39,9 @@ type PexSearchAsset struct {
 	// International Standard Recording Code.
 	ISRC string
 
+	// The label that owns the asset (e.g. Sony Music Entertainment).
+	Label string
+
 	// The total duration of the asset in seconds.
 	Duration float32
 }
@@ -48,6 +51,7 @@ func newPexSearchAssetFromC(cAsset *C.AE_Asset) *PexSearchAsset {
 		Title:    C.GoString(C.AE_Asset_GetTitle(cAsset)),
 		Artist:   C.GoString(C.AE_Asset_GetArtist(cAsset)),
 		ISRC:     C.GoString(C.AE_Asset_GetISRC(cAsset)),
+		Label:    C.GoString(C.AE_Asset_GetLabel(cAsset)),
 		Duration: float32(C.AE_Asset_GetDuration(cAsset)),
 	}
 }
