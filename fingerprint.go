@@ -26,6 +26,10 @@ type Fingerprint struct {
 	b []byte
 }
 
+func (x *Fingerprint) Dump() []byte {
+	return x.b
+}
+
 func NewFingerprint(b []byte) *Fingerprint {
 	return &Fingerprint{
 		b: b,
