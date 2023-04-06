@@ -6,8 +6,12 @@ package pexae
 // #include <pex/ae/sdk/mockserver.h>
 import "C"
 
+type client interface {
+	getCClient() *C.AE_Client
+}
+
 // MockClient initializes the provided client to communicate with the mockserver.
-func MockClient(client *Client) error {
+func MockClient(c client) error {
 	C.AE_Lock()
 	defer C.AE_Unlock()
 
@@ -17,6 +21,6 @@ func MockClient(client *Client) error {
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	C.AE_Mockserver_InitClient(client.c, nil, cStatus)
+	C.AE_Mockserver_InitClient(c.getCClient(), nil, cStatus)
 	return statusToError(cStatus)
 }

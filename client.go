@@ -17,12 +17,28 @@ import "unsafe"
 // automatically handles the connection and authentication with the
 // service.
 type Client struct {
+	fingerprinter
+
 	c *C.AE_Client
 }
 
 // NewClient initializes connections and authenticates with the
 // backend service with the credentials provided as arguments.
 func NewClient(clientID, clientSecret string) (*Client, error) {
+	cClient, err := newClient(C.AE_LICENSE_SEARCH, clientID, clientSecret)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{
+		c: cClient,
+	}, nil
+}
+
+func (x *Client) getCClient() *C.AE_Client {
+	return x.c
+}
+
+func newClient(typ C.AE_ClientType, clientID, clientSecret string) (*C.AE_Client, error) {
 	cClientID := C.CString(clientID)
 	defer C.free(unsafe.Pointer(cClientID))
 
@@ -55,25 +71,24 @@ func NewClient(clientID, clientSecret string) (*Client, error) {
 		panic("out of memory")
 	}
 
-	C.AE_Client_Init(cClient, cClientID, cClientSecret, cStatus)
+	C.AE_Client_InitType(cClient, typ, cClientID, cClientSecret, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		// TODO: if this fails, run AE_Cleanup
 		C.free(unsafe.Pointer(cClient))
 		return nil, err
 	}
-
-	return &Client{
-		c: cClient,
-	}, nil
+	return cClient, nil
 }
 
 // Close closes all connections to the backend service and releases
-// the memory manually allocated by the core library. The
-// LicenseSearch and MetadataSearch fields must not be
-// used after Close is called.
+// the memory manually allocated by the core library.
 func (x *Client) Close() error {
+	return closeClient(&x.c)
+}
+
+func closeClient(c **C.AE_Client) error {
 	C.AE_Lock()
-	C.AE_Client_Delete(&x.c)
+	C.AE_Client_Delete(c)
 	C.AE_Unlock()
 
 	C.AE_Cleanup()
