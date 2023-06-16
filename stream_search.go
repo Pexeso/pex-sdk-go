@@ -54,7 +54,7 @@ func (x StreamEventType) String() string {
 type StreamEvent struct {
 	Type           StreamEventType
 	Err            error
-	Asset          *Asset
+	Asset          *PexSearchAsset
 	SegmentType    SegmentType
 	QueryTimestamp int64
 	AssetTimestamp int64
@@ -181,7 +181,7 @@ func getEventAsset(event *StreamEvent, cEvent *C.AE_StreamSearchEvent, cStatus *
 		panic(err)
 	}
 
-	event.Asset = newAssetFromC(cAsset)
+	event.Asset = newPexSearchAssetFromC(cAsset)
 	event.SegmentType = SegmentType(segmentType)
 	event.AssetTimestamp = int64(assetTimestamp)
 }
