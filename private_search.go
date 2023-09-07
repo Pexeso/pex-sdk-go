@@ -137,7 +137,7 @@ func (x *PrivateSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cSt
 }
 
 // PrivateSearchClient serves as an entry point to all operations that
-// communicate with the Attribution Engine backend service. It
+// communicate with Pex backend services. It
 // automatically handles the connection and authentication with the
 // service.
 type PrivateSearchClient struct {

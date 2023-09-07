@@ -1,16 +1,16 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-// Package pex contains the Go bindings for the Attribution Engine's SDK.
+// Package pex contains the Go bindings for the Pex SDK.
 //
 // Important! Please make sure to install the core library, as described in the
-// following link: https://docs.ae.pex.com/installation/, before trying to use
+// following link: https://docs.search.pex.com/installation/, before trying to use
 // the Go bindings.
 //
 // # Installation
 //
 // You can install the Go language bindings like this:
 //
-//	go get github.com/Pexeso/ae-sdk-go/v3
+//	go get github.com/Pexeso/pex-sdk-go/v4
 //
 // # Client
 //
