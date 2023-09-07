@@ -2,6 +2,8 @@
 
 package pexae
 
+import "encoding/json"
+
 // SegmentType shows whether the segment matched on audio, video or melody.
 type SegmentType int
 
@@ -18,6 +20,10 @@ func (x SegmentType) String() string {
 	default:
 		return "unknown"
 	}
+}
+
+func (x SegmentType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(x.String())
 }
 
 const (

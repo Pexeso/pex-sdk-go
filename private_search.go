@@ -4,7 +4,8 @@ package pexae
 
 // #include <pex/ae/sdk/lock.h>
 // #include <pex/ae/sdk/client.h>
-// #include <pex/ae/sdk/private_search.h>
+// #include <pex/ae/sdk/ingestion.h>
+// #include <pex/ae/sdk/search.h>
 // #include <stdlib.h>
 import "C"
 import (
@@ -44,7 +45,7 @@ type PrivateSearchMatch struct {
 // PrivateSearchFuture object is returned by the Client.StartPrivateSearch
 // function and is used to retrieve a search result.
 type PrivateSearchFuture struct {
-	client *Client
+	client *PrivateSearchClient
 
 	LookupID string
 }
@@ -62,44 +63,44 @@ func (x *PrivateSearchFuture) Get() (*PrivateSearchResult, error) {
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cRequest := C.AE_PrivateSearchCheckRequest_New()
+	cRequest := C.AE_CheckSearchRequest_New()
 	if cRequest == nil {
 		panic("out of memory")
 	}
-	defer C.AE_PrivateSearchCheckRequest_Delete(&cRequest)
+	defer C.AE_CheckSearchRequest_Delete(&cRequest)
 
-	cResult := C.AE_PrivateSearchCheckResult_New()
+	cResult := C.AE_CheckSearchResult_New()
 	if cResult == nil {
 		panic("out of memory")
 	}
-	defer C.AE_PrivateSearchCheckResult_Delete(&cResult)
+	defer C.AE_CheckSearchResult_Delete(&cResult)
 
 	cLookupID := C.CString(x.LookupID)
 	defer C.free(unsafe.Pointer(cLookupID))
 
-	C.AE_PrivateSearchCheckRequest_SetLookupID(cRequest, cLookupID, cStatus)
+	C.AE_CheckSearchRequest_SetLookupID(cRequest, cLookupID)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
-	C.AE_PrivateSearch_Check(x.client.c, cRequest, cResult, cStatus)
+	C.AE_CheckSearch(x.client.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
-	return x.processResult(cResult), nil
+	return x.processResult(cResult, cStatus)
 }
 
-func (x *PrivateSearchFuture) processResult(cResult *C.AE_PrivateSearchCheckResult) *PrivateSearchResult {
-	cMatch := C.AE_PrivateSearchMatch_New()
+func (x *PrivateSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus *C.AE_Status) (*PrivateSearchResult, error) {
+	cMatch := C.AE_SearchMatch_New()
 	if cMatch == nil {
 		panic("out of memory")
 	}
-	defer C.AE_PrivateSearchMatch_Delete(&cMatch)
+	defer C.AE_SearchMatch_Delete(&cMatch)
 
 	var cMatchesPos C.int = 0
 	var matches []*PrivateSearchMatch
 
-	for C.AE_PrivateSearchCheckResult_NextMatch(cResult, cMatch, &cMatchesPos) {
+	for C.AE_CheckSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
 		var cQueryStart C.int64_t
 		var cQueryEnd C.int64_t
 		var cAssetStart C.int64_t
@@ -108,7 +109,7 @@ func (x *PrivateSearchFuture) processResult(cResult *C.AE_PrivateSearchCheckResu
 		var cSegmentsPos C.int = 0
 		var segments []*Segment
 
-		for C.AE_PrivateSearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cType, &cSegmentsPos) {
+		for C.AE_SearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cType, &cSegmentsPos) {
 			segments = append(segments, &Segment{
 				Type:       SegmentType(cType),
 				QueryStart: int64(cQueryStart),
@@ -118,22 +119,57 @@ func (x *PrivateSearchFuture) processResult(cResult *C.AE_PrivateSearchCheckResu
 			})
 		}
 
+		cProvidedID := C.AE_SearchMatch_GetProvidedID(cMatch, cStatus)
+		if err := statusToError(cStatus); err != nil {
+			return nil, err
+		}
+
 		matches = append(matches, &PrivateSearchMatch{
-			ProvidedID: C.GoString(C.AE_PrivateSearchMatch_GetProvidedID(cMatch)),
+			ProvidedID: C.GoString(cProvidedID),
 			Segments:   segments,
 		})
 	}
 
 	return &PrivateSearchResult{
-		LookupID: C.GoString(C.AE_PrivateSearchCheckResult_GetLookupID(cResult)),
+		LookupID: x.LookupID,
 		Matches:  matches,
-	}
+	}, nil
 }
 
-// StartPrivateSearch starts a private search. This operation does not block until
+// PrivateSearchClient serves as an entry point to all operations that
+// communicate with the Attribution Engine backend service. It
+// automatically handles the connection and authentication with the
+// service.
+type PrivateSearchClient struct {
+	fingerprinter
+
+	c *C.AE_Client
+}
+
+func NewPrivateSearchClient(clientID, clientSecret string) (*PrivateSearchClient, error) {
+	cClient, err := newClient(C.AE_PRIVATE_SEARCH, clientID, clientSecret)
+	if err != nil {
+		return nil, err
+	}
+	return &PrivateSearchClient{
+		c: cClient,
+	}, nil
+}
+
+// Close closes all connections to the backend service and releases
+// the memory manually allocated by the core library.
+func (x *PrivateSearchClient) Close() error {
+	return closeClient(&x.c)
+}
+
+func (x *PrivateSearchClient) getCClient() *C.AE_Client {
+	return x.c
+}
+
+// StartSearch starts a private search. This operation does not block until
 // the search is finished, it does however perform a network operation
 // to initiate the search on the backend service.
-func (x *Client) StartPrivateSearch(req *PrivateSearchRequest) (*PrivateSearchFuture, error) {
+func (x *PrivateSearchClient) StartSearch(req *PrivateSearchRequest) (*PrivateSearchFuture, error) {
 	C.AE_Lock()
 	defer C.AE_Unlock()
 
@@ -143,17 +179,17 @@ func (x *Client) StartPrivateSearch(req *PrivateSearchRequest) (*PrivateSearchFu
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cRequest := C.AE_PrivateSearchStartRequest_New()
+	cRequest := C.AE_StartSearchRequest_New()
 	if cRequest == nil {
 		panic("out of memory")
 	}
-	defer C.AE_PrivateSearchStartRequest_Delete(&cRequest)
+	defer C.AE_StartSearchRequest_Delete(&cRequest)
 
-	cResult := C.AE_PrivateSearchStartResult_New()
+	cResult := C.AE_StartSearchResult_New()
 	if cResult == nil {
 		panic("out of memory")
 	}
-	defer C.AE_PrivateSearchStartResult_Delete(&cResult)
+	defer C.AE_StartSearchResult_Delete(&cResult)
 
 	cBuffer := C.AE_Buffer_New()
 	if cBuffer == nil {
@@ -166,29 +202,29 @@ func (x *Client) StartPrivateSearch(req *PrivateSearchRequest) (*PrivateSearchFu
 
 	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
 
-	C.AE_PrivateSearchStartRequest_SetFingerprint(cRequest, cBuffer, cStatus)
+	C.AE_StartSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
-	C.AE_PrivateSearch_Start(x.c, cRequest, cResult, cStatus)
+	C.AE_StartSearch(x.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
 	return &PrivateSearchFuture{
 		client:   x,
-		LookupID: C.GoString(C.AE_PrivateSearchStartResult_GetLookupID(cResult)),
+		LookupID: C.GoString(C.AE_StartSearchResult_GetLookupID(cResult)),
 	}, nil
 }
 
-// IngestPrivateSearchAsset ingests a fingerprint into the private search
+// Ingest ingests a fingerprint into the private search
 // catalog. The catalog is determined from the authentication credentials used
 // when initializing the client. If you want to ingest into multiple catalogs
 // within one application, you need to use multiple clients. The id parameter
 // identifies the fingerprint and will be returned during search to identify
 // the matched asset.
-func (x *Client) IngestPrivateSearchAsset(id string, ft *Fingerprint) error {
+func (x *PrivateSearchClient) Ingest(id string, ft *Fingerprint) error {
 	C.AE_Lock()
 	defer C.AE_Unlock()
 
@@ -212,6 +248,6 @@ func (x *Client) IngestPrivateSearchAsset(id string, ft *Fingerprint) error {
 
 	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
 
-	C.AE_PrivateSearch_Ingest(x.c, cID, cBuffer, cStatus)
+	C.AE_Ingest(x.c, cID, cBuffer, cStatus)
 	return statusToError(cStatus)
 }

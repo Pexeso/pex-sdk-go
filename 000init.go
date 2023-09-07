@@ -6,8 +6,8 @@ package pexae
 
 // #cgo pkg-config: pexae
 //
-// #define AE_SDK_MAJOR_VERSION 3
-// #define AE_SDK_MINOR_VERSION 4
+// #define AE_SDK_MAJOR_VERSION 4
+// #define AE_SDK_MINOR_VERSION 0
 //
 // #include <pex/ae/sdk/version.h>
 import "C"

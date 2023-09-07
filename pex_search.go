@@ -164,7 +164,7 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 	}, nil
 }
 
-// Client serves as an entry point to all operations that
+// PexSearchClient serves as an entry point to all operations that
 // communicate with the Attribution Engine backend service. It
 // automatically handles the connection and authentication with the
 // service.
