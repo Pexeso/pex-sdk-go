@@ -1,4 +1,4 @@
-package pexae
+package pex
 
 // This file is deliberately named like this so that it's first compiled and
 // first executed because it performs version checks to make sure these

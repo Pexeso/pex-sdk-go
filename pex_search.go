@@ -1,6 +1,6 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-package pexae
+package pex
 
 // #include <pex/ae/sdk/asset.h>
 // #include <pex/ae/sdk/lock.h>

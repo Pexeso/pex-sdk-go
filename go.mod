@@ -1,3 +1,3 @@
-module github.com/Pexeso/ae-sdk-go/v3
+module github.com/Pexeso/pex-sdk-go/v4
 
 go 1.19

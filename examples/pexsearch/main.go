@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	pexae "github.com/Pexeso/ae-sdk-go/v3"
+	pex "github.com/Pexeso/ae-sdk-go/v4"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 
 func main() {
 	// Initialize and authenticate the client.
-	client, err := pexae.NewPexSearchClient(clientID, clientSecret)
+	client, err := pex.NewPexSearchClient(clientID, clientSecret)
 	if err != nil {
 		panic(err)
 	}
@@ -24,7 +24,7 @@ func main() {
 	// Optionally mock the client. If a client is mocked, it will only communicate
 	// with the local mockserver instead of production servers. This is useful for
 	// testing.
-	if err := pexae.MockClient(client); err != nil {
+	if err := pex.MockClient(client); err != nil {
 		panic(err)
 	}
 
@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Build the request.
-	req := &pexae.PexSearchRequest{
+	req := &pex.PexSearchRequest{
 		Fingerprint: ft,
 	}
 

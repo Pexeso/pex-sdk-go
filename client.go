@@ -1,8 +1,7 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-package pexae
+package pex
 
-// #cgo pkg-config: pexae
 // #include <pex/ae/sdk/init.h>
 // #include <pex/ae/sdk/lock.h>
 // #include <pex/ae/sdk/client.h>

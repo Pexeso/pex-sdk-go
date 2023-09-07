@@ -1,6 +1,6 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-// Package pexae contains the Go bindings for the Attribution Engine's SDK.
+// Package pex contains the Go bindings for the Attribution Engine's SDK.
 //
 // Important! Please make sure to install the core library, as described in the
 // following link: https://docs.ae.pex.com/installation/, before trying to use
@@ -16,7 +16,7 @@
 //
 // Before you can do any operation with the SDK you need to initialize a client.
 //
-//	client, err := pexae.NewClient(clientID, clientSecret)
+//	client, err := pex.NewClient(clientID, clientSecret)
 //	if err != nil {
 //	    panic(err)
 //	}
@@ -24,7 +24,7 @@
 //
 // If you want to test the SDK using the mockserver you need to mock the client:
 //
-//	if err := pexae.MockClient(client); err != nil {
+//	if err := pex.MockClient(client); err != nil {
 //	    panic(err)
 //	}
 //
@@ -46,7 +46,7 @@
 //
 //	b, _ := ioutil.ReadFile("/path/to/file.mp4")
 //
-//	ft, err := pexae.FingerprintBuffer(b)
+//	ft, err := pex.FingerprintBuffer(b)
 //	if err != nil {
 //	    panic(err)
 //	}
@@ -54,8 +54,8 @@
 // If you only want to use certain types of fingerprinting, you can
 // specify that as well:
 //
-//	ft1, _ := client.FingerprintFileForTypes("/path/to/file.mp4", pexae.FingerprintTypeAudio)
-//	ft2, _ := client.FingerprintBufferForTypes(b, pexae.FingerprintTypeVideo|pexae.FingerprintTypeMelody)
+//	ft1, _ := client.FingerprintFileForTypes("/path/to/file.mp4", pex.FingerprintTypeAudio)
+//	ft2, _ := client.FingerprintBufferForTypes(b, pex.FingerprintTypeVideo|pex.FingerprintTypeMelody)
 //
 // Both the files and the memory buffers must be valid media content in
 // following formats:
@@ -71,7 +71,7 @@
 // After the fingerprint is generated, you can use it to perform a metadata search.
 //
 //	// Build the request.
-//	req := &pexae.MetadataSearchRequest{
+//	req := &pex.MetadataSearchRequest{
 //	    Fingerprint: ft,
 //	}
 //
@@ -99,7 +99,7 @@
 //	// ...
 //
 //	// Build the request.
-//	req := &pexae.LicenseSearchRequest{
+//	req := &pex.LicenseSearchRequest{
 //	    Fingerprint: ft,
 //	}
 //
@@ -114,4 +114,4 @@
 // The most significant difference between the searches currently is in the
 // results they return. See MetadataSearchResult and LicenseSearchResult for
 // more information.
-package pexae
+package pex
