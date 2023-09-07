@@ -1,6 +1,6 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-package pexae
+package pex
 
 // #include <pex/ae/sdk/asset.h>
 // #include <pex/ae/sdk/lock.h>
@@ -165,7 +165,7 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 }
 
 // PexSearchClient serves as an entry point to all operations that
-// communicate with the Attribution Engine backend service. It
+// communicate with Pex backend services. It
 // automatically handles the connection and authentication with the
 // service.
 type PexSearchClient struct {

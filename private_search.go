@@ -1,6 +1,6 @@
 // Copyright 2020 Pexeso Inc. All rights reserved.
 
-package pexae
+package pex
 
 // #include <pex/ae/sdk/lock.h>
 // #include <pex/ae/sdk/client.h>
@@ -137,7 +137,7 @@ func (x *PrivateSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cSt
 }
 
 // PrivateSearchClient serves as an entry point to all operations that
-// communicate with the Attribution Engine backend service. It
+// communicate with Pex backend services. It
 // automatically handles the connection and authentication with the
 // service.
 type PrivateSearchClient struct {
