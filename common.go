@@ -2,7 +2,10 @@
 
 package pex
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+)
 
 // SegmentType shows whether the segment matched on audio, video or melody.
 type SegmentType int
@@ -22,8 +25,34 @@ func (x SegmentType) String() string {
 	}
 }
 
+func ParseSegmentType(s string) (SegmentType, error) {
+	switch s {
+	case "unspecified":
+		return SegmentTypeUnspecified, nil
+	case "audio":
+		return SegmentTypeAudio, nil
+	case "video":
+		return SegmentTypeVideo, nil
+	case "melody":
+		return SegmentTypeMelody, nil
+	default:
+		return SegmentTypeUnspecified, errors.New("unknown segment type")
+	}
+}
+
 func (x SegmentType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(x.String())
+}
+
+func (x *SegmentType) UnmarshalJSON(data []byte) (err error) {
+	var segment string
+	if err := json.Unmarshal(data, &segment); err != nil {
+		return err
+	}
+	if *x, err = ParseSegmentType(segment); err != nil {
+		return err
+	}
+	return nil
 }
 
 const (
