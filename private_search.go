@@ -24,8 +24,8 @@ type PrivateSearchRequest struct {
 // This object is returned from PrivateSearchFuture.Get upon successful
 // completion.
 type PrivateSearchResult struct {
-	// An ID that uniquely identifies a particular search. Can be used for diagnostics.
-	LookupID string
+	// IDs that uniquely identify a particular search. Can be used for diagnostics.
+	LookupIDs []string
 
 	// The assets which the query matched against.
 	Matches []*PrivateSearchMatch
@@ -47,7 +47,7 @@ type PrivateSearchMatch struct {
 type PrivateSearchFuture struct {
 	client *PrivateSearchClient
 
-	LookupID string
+	LookupIDs []string
 }
 
 // Get blocks until the search result is ready and then returns it. It
@@ -75,12 +75,10 @@ func (x *PrivateSearchFuture) Get() (*PrivateSearchResult, error) {
 	}
 	defer C.AE_CheckSearchResult_Delete(&cResult)
 
-	cLookupID := C.CString(x.LookupID)
-	defer C.free(unsafe.Pointer(cLookupID))
-
-	C.AE_CheckSearchRequest_SetLookupID(cRequest, cLookupID)
-	if err := statusToError(cStatus); err != nil {
-		return nil, err
+	for _, lookupID := range x.LookupIDs {
+		cLookupID := C.CString(lookupID)
+		defer C.free(unsafe.Pointer(cLookupID))
+		C.AE_CheckSearchRequest_AddLookupID(cRequest, cLookupID)
 	}
 
 	C.AE_CheckSearch(x.client.c, cRequest, cResult, cStatus)
@@ -131,8 +129,8 @@ func (x *PrivateSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cSt
 	}
 
 	return &PrivateSearchResult{
-		LookupID: x.LookupID,
-		Matches:  matches,
+		LookupIDs: x.LookupIDs,
+		Matches:   matches,
 	}, nil
 }
 
@@ -212,9 +210,17 @@ func (x *PrivateSearchClient) StartSearch(req *PrivateSearchRequest) (*PrivateSe
 		return nil, err
 	}
 
+	var cLookupIDPos C.size_t = 0
+	var lookupIDs []string
+	var cLookupID *C.char
+
+	for C.AE_StartSearchResult_NextLookupID(cResult, &cLookupIDPos, &cLookupID) {
+		lookupIDs = append(lookupIDs, C.GoString(cLookupID))
+	}
+
 	return &PrivateSearchFuture{
-		client:   x,
-		LookupID: C.GoString(C.AE_StartSearchResult_GetLookupID(cResult)),
+		client:    x,
+		LookupIDs: lookupIDs,
 	}, nil
 }
 

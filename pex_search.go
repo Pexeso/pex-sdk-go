@@ -22,8 +22,8 @@ type PexSearchRequest struct {
 // This object is returned from PexSearchFuture.Get upon successful
 // completion.
 type PexSearchResult struct {
-	// An ID that uniquely identifies a particular search. Can be used for diagnostics.
-	LookupID string
+	// IDs that uniquely identify a particular search. Can be used for diagnostics.
+	LookupIDs []string
 
 	// The assets which the query matched against.
 	Matches []*PexSearchMatch
@@ -72,7 +72,7 @@ type PexSearchMatch struct {
 type PexSearchFuture struct {
 	client *PexSearchClient
 
-	LookupID string
+	LookupIDs []string
 }
 
 // Get blocks until the search result is ready and then returns it. It
@@ -100,10 +100,11 @@ func (x *PexSearchFuture) Get() (*PexSearchResult, error) {
 	}
 	defer C.AE_CheckSearchResult_Delete(&cResult)
 
-	cLookupID := C.CString(x.LookupID)
-	defer C.free(unsafe.Pointer(cLookupID))
-
-	C.AE_CheckSearchRequest_SetLookupID(cRequest, cLookupID)
+	for _, lookupID := range x.LookupIDs {
+		cLookupID := C.CString(lookupID)
+		defer C.free(unsafe.Pointer(cLookupID))
+		C.AE_CheckSearchRequest_AddLookupID(cRequest, cLookupID)
+	}
 
 	C.AE_CheckSearch(x.client.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
@@ -159,8 +160,8 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 	}
 
 	return &PexSearchResult{
-		LookupID: x.LookupID,
-		Matches:  matches,
+		LookupIDs: x.LookupIDs,
+		Matches:   matches,
 	}, nil
 }
 
@@ -240,8 +241,16 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 		return nil, err
 	}
 
+	var cLookupIDPos C.size_t = 0
+	var lookupIDs []string
+	var cLookupID *C.char
+
+	for C.AE_StartSearchResult_NextLookupID(cResult, &cLookupIDPos, &cLookupID) {
+		lookupIDs = append(lookupIDs, C.GoString(cLookupID))
+	}
+
 	return &PexSearchFuture{
-		client:   x,
-		LookupID: C.GoString(C.AE_StartSearchResult_GetLookupID(cResult)),
+		client:    x,
+		LookupIDs: lookupIDs,
 	}, nil
 }
