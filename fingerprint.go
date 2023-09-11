@@ -3,8 +3,8 @@
 package pex
 
 // #include <stdlib.h>
-// #include <pex/ae/sdk/lock.h>
-// #include <pex/ae/sdk/fingerprint.h>
+// #include <pex/sdk/lock.h>
+// #include <pex/sdk/fingerprint.h>
 import "C"
 import "unsafe"
 

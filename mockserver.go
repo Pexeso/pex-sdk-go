@@ -2,8 +2,8 @@
 
 package pex
 
-// #include <pex/ae/sdk/lock.h>
-// #include <pex/ae/sdk/mockserver.h>
+// #include <pex/sdk/lock.h>
+// #include <pex/sdk/mockserver.h>
 import "C"
 
 type client interface {
