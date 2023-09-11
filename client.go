@@ -2,9 +2,9 @@
 
 package pex
 
-// #include <pex/ae/sdk/init.h>
-// #include <pex/ae/sdk/lock.h>
-// #include <pex/ae/sdk/client.h>
+// #include <pex/sdk/init.h>
+// #include <pex/sdk/lock.h>
+// #include <pex/sdk/client.h>
 // #include <stdlib.h>
 import "C"
 import "unsafe"

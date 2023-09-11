@@ -2,10 +2,10 @@
 
 package pex
 
-// #include <pex/ae/sdk/lock.h>
-// #include <pex/ae/sdk/client.h>
-// #include <pex/ae/sdk/ingestion.h>
-// #include <pex/ae/sdk/search.h>
+// #include <pex/sdk/lock.h>
+// #include <pex/sdk/client.h>
+// #include <pex/sdk/ingestion.h>
+// #include <pex/sdk/search.h>
 // #include <stdlib.h>
 import "C"
 import (

@@ -9,7 +9,7 @@ package pex
 // #define AE_SDK_MAJOR_VERSION 4
 // #define AE_SDK_MINOR_VERSION 0
 //
-// #include <pex/ae/sdk/version.h>
+// #include <pex/sdk/version.h>
 import "C"
 
 func init() {
