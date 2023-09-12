@@ -141,11 +141,11 @@ func (x *PrivateSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cSt
 type PrivateSearchClient struct {
 	fingerprinter
 
-	c *C.AE_Client
+	c *C.Pex_Client
 }
 
 func NewPrivateSearchClient(clientID, clientSecret string) (*PrivateSearchClient, error) {
-	cClient, err := newClient(C.AE_PRIVATE_SEARCH, clientID, clientSecret)
+	cClient, err := newClient(C.Pex_PRIVATE_SEARCH, clientID, clientSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (x *PrivateSearchClient) Close() error {
 	return closeClient(&x.c)
 }
 
-func (x *PrivateSearchClient) getCClient() *C.AE_Client {
+func (x *PrivateSearchClient) getCClient() *C.Pex_Client {
 	return x.c
 }
 
@@ -189,16 +189,16 @@ func (x *PrivateSearchClient) StartSearch(req *PrivateSearchRequest) (*PrivateSe
 	}
 	defer C.AE_StartSearchResult_Delete(&cResult)
 
-	cBuffer := C.AE_Buffer_New()
+	cBuffer := C.Pex_Buffer_New()
 	if cBuffer == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Buffer_Delete(&cBuffer)
+	defer C.Pex_Buffer_Delete(&cBuffer)
 
 	ftData := unsafe.Pointer(&req.Fingerprint.b[0])
 	ftSize := C.size_t(len(req.Fingerprint.b))
 
-	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
+	C.Pex_Buffer_Set(cBuffer, ftData, ftSize)
 
 	C.AE_StartSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
 	if err := statusToError(cStatus); err != nil {
@@ -243,16 +243,16 @@ func (x *PrivateSearchClient) Ingest(id string, ft *Fingerprint) error {
 	cID := C.CString(id)
 	defer C.free(unsafe.Pointer(cID))
 
-	cBuffer := C.AE_Buffer_New()
+	cBuffer := C.Pex_Buffer_New()
 	if cBuffer == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Buffer_Delete(&cBuffer)
+	defer C.Pex_Buffer_Delete(&cBuffer)
 
 	ftData := unsafe.Pointer(&ft.b[0])
 	ftSize := C.size_t(len(ft.b))
 
-	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
+	C.Pex_Buffer_Set(cBuffer, ftData, ftSize)
 
 	C.AE_Ingest(x.c, cID, cBuffer, cStatus)
 	return statusToError(cStatus)

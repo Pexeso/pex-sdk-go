@@ -7,7 +7,7 @@ package pex
 import "C"
 
 type client interface {
-	getCClient() *C.AE_Client
+	getCClient() *C.Pex_Client
 }
 
 // MockClient initializes the provided client to communicate with the mockserver.

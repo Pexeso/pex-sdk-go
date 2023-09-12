@@ -9,7 +9,7 @@ package pex
 import "C"
 import "unsafe"
 
-func newClient(typ C.AE_ClientType, clientID, clientSecret string) (*C.AE_Client, error) {
+func newClient(typ C.Pex_ClientType, clientID, clientSecret string) (*C.Pex_Client, error) {
 	cClientID := C.CString(clientID)
 	defer C.free(unsafe.Pointer(cClientID))
 
@@ -37,12 +37,12 @@ func newClient(typ C.AE_ClientType, clientID, clientSecret string) (*C.AE_Client
 	}
 	defer C.AE_Status_Delete(&cStatus)
 
-	cClient := C.AE_Client_New()
+	cClient := C.Pex_Client_New()
 	if cClient == nil {
 		panic("out of memory")
 	}
 
-	C.AE_Client_Init(cClient, typ, cClientID, cClientSecret, cStatus)
+	C.Pex_Client_Init(cClient, typ, cClientID, cClientSecret, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		// TODO: if this fails, run AE_Cleanup
 		C.free(unsafe.Pointer(cClient))
@@ -51,9 +51,9 @@ func newClient(typ C.AE_ClientType, clientID, clientSecret string) (*C.AE_Client
 	return cClient, nil
 }
 
-func closeClient(c **C.AE_Client) error {
+func closeClient(c **C.Pex_Client) error {
 	C.AE_Lock()
-	C.AE_Client_Delete(c)
+	C.Pex_Client_Delete(c)
 	C.AE_Unlock()
 
 	C.AE_Cleanup()
