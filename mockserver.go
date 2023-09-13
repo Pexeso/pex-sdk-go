@@ -12,15 +12,15 @@ type client interface {
 
 // MockClient initializes the provided client to communicate with the mockserver.
 func MockClient(c client) error {
-	C.AE_Lock()
-	defer C.AE_Unlock()
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
 
-	cStatus := C.AE_Status_New()
+	cStatus := C.Pex_Status_New()
 	if cStatus == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Status_Delete(&cStatus)
+	defer C.Pex_Status_Delete(&cStatus)
 
-	C.AE_Mockserver_InitClient(c.getCClient(), nil, cStatus)
+	C.Pex_Mockserver_InitClient(c.getCClient(), nil, cStatus)
 	return statusToError(cStatus)
 }

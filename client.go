@@ -20,7 +20,7 @@ func newClient(typ C.Pex_ClientType, clientID, clientSecret string) (*C.Pex_Clie
 	cStatusMessage := make([]C.char, 100)
 	cStatusMessageSize := C.size_t(len(cStatusMessage))
 
-	C.AE_Init(cClientID, cClientSecret, &cStatusCode, &cStatusMessage[0], cStatusMessageSize)
+	C.Pex_Init(cClientID, cClientSecret, &cStatusCode, &cStatusMessage[0], cStatusMessageSize)
 	if StatusCode(cStatusCode) != StatusOK {
 		return nil, &Error{
 			Code:    StatusCode(cStatusCode),
@@ -28,14 +28,14 @@ func newClient(typ C.Pex_ClientType, clientID, clientSecret string) (*C.Pex_Clie
 		}
 	}
 
-	C.AE_Lock()
-	defer C.AE_Unlock()
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
 
-	cStatus := C.AE_Status_New()
+	cStatus := C.Pex_Status_New()
 	if cStatus == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Status_Delete(&cStatus)
+	defer C.Pex_Status_Delete(&cStatus)
 
 	cClient := C.Pex_Client_New()
 	if cClient == nil {
@@ -44,7 +44,7 @@ func newClient(typ C.Pex_ClientType, clientID, clientSecret string) (*C.Pex_Clie
 
 	C.Pex_Client_Init(cClient, typ, cClientID, cClientSecret, cStatus)
 	if err := statusToError(cStatus); err != nil {
-		// TODO: if this fails, run AE_Cleanup
+		// TODO: if this fails, run Pex_Cleanup
 		C.free(unsafe.Pointer(cClient))
 		return nil, err
 	}
@@ -52,10 +52,10 @@ func newClient(typ C.Pex_ClientType, clientID, clientSecret string) (*C.Pex_Clie
 }
 
 func closeClient(c **C.Pex_Client) error {
-	C.AE_Lock()
+	C.Pex_Lock()
 	C.Pex_Client_Delete(c)
-	C.AE_Unlock()
+	C.Pex_Unlock()
 
-	C.AE_Cleanup()
+	C.Pex_Cleanup()
 	return nil
 }

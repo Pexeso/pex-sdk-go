@@ -6,14 +6,14 @@ package pex
 
 // #cgo pkg-config: pexae
 //
-// #define AE_SDK_MAJOR_VERSION 4
-// #define AE_SDK_MINOR_VERSION 0
+// #define PEX_SDK_MAJOR_VERSION 4
+// #define PEX_SDK_MINOR_VERSION 0
 //
 // #include <pex/sdk/version.h>
 import "C"
 
 func init() {
-	compatible := C.AE_Version_IsCompatible(C.AE_SDK_MAJOR_VERSION, C.AE_SDK_MINOR_VERSION)
+	compatible := C.Pex_Version_IsCompatible(C.PEX_SDK_MAJOR_VERSION, C.PEX_SDK_MINOR_VERSION)
 	if !compatible {
 		panic("bindings are not compatible with the native library")
 	}

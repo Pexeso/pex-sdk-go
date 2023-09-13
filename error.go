@@ -38,11 +38,11 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("%d: %s", e.Code, e.Message)
 }
 
-func statusToError(status *C.AE_Status) error {
-	if !C.AE_Status_OK(status) {
+func statusToError(status *C.Pex_Status) error {
+	if !C.Pex_Status_OK(status) {
 		return &Error{
-			Code:    StatusCode(C.AE_Status_GetCode(status)),
-			Message: C.GoString(C.AE_Status_GetMessage(status)),
+			Code:    StatusCode(C.Pex_Status_GetCode(status)),
+			Message: C.GoString(C.Pex_Status_GetMessage(status)),
 		}
 	}
 	return nil

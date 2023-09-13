@@ -67,14 +67,14 @@ func reduceTypes(in []FingerprintType) (out FingerprintType) {
 }
 
 func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprint, error) {
-	C.AE_Lock()
-	defer C.AE_Unlock()
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
 
-	status := C.AE_Status_New()
+	status := C.Pex_Status_New()
 	if status == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Status_Delete(&status)
+	defer C.Pex_Status_Delete(&status)
 
 	ft := C.Pex_Buffer_New()
 	if ft == nil {
