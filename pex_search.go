@@ -46,13 +46,13 @@ type PexSearchAsset struct {
 	Duration float32
 }
 
-func newPexSearchAssetFromC(cAsset *C.AE_Asset) *PexSearchAsset {
+func newPexSearchAssetFromC(cAsset *C.Pex_Asset) *PexSearchAsset {
 	return &PexSearchAsset{
-		Title:    C.GoString(C.AE_Asset_GetTitle(cAsset)),
-		Artist:   C.GoString(C.AE_Asset_GetArtist(cAsset)),
-		ISRC:     C.GoString(C.AE_Asset_GetISRC(cAsset)),
-		Label:    C.GoString(C.AE_Asset_GetLabel(cAsset)),
-		Duration: float32(C.AE_Asset_GetDuration(cAsset)),
+		Title:    C.GoString(C.Pex_Asset_GetTitle(cAsset)),
+		Artist:   C.GoString(C.Pex_Asset_GetArtist(cAsset)),
+		ISRC:     C.GoString(C.Pex_Asset_GetISRC(cAsset)),
+		Label:    C.GoString(C.Pex_Asset_GetLabel(cAsset)),
+		Duration: float32(C.Pex_Asset_GetDuration(cAsset)),
 	}
 }
 
@@ -79,57 +79,57 @@ type PexSearchFuture struct {
 // also releases all the allocated resources, so it will return an
 // error when called multiple times.
 func (x *PexSearchFuture) Get() (*PexSearchResult, error) {
-	C.AE_Lock()
-	defer C.AE_Unlock()
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
 
-	cStatus := C.AE_Status_New()
+	cStatus := C.Pex_Status_New()
 	if cStatus == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Status_Delete(&cStatus)
+	defer C.Pex_Status_Delete(&cStatus)
 
-	cRequest := C.AE_CheckSearchRequest_New()
+	cRequest := C.Pex_CheckSearchRequest_New()
 	if cRequest == nil {
 		panic("out of memory")
 	}
-	defer C.AE_CheckSearchRequest_Delete(&cRequest)
+	defer C.Pex_CheckSearchRequest_Delete(&cRequest)
 
-	cResult := C.AE_CheckSearchResult_New()
+	cResult := C.Pex_CheckSearchResult_New()
 	if cResult == nil {
 		panic("out of memory")
 	}
-	defer C.AE_CheckSearchResult_Delete(&cResult)
+	defer C.Pex_CheckSearchResult_Delete(&cResult)
 
 	for _, lookupID := range x.LookupIDs {
 		cLookupID := C.CString(lookupID)
 		defer C.free(unsafe.Pointer(cLookupID))
-		C.AE_CheckSearchRequest_AddLookupID(cRequest, cLookupID)
+		C.Pex_CheckSearchRequest_AddLookupID(cRequest, cLookupID)
 	}
 
-	C.AE_CheckSearch(x.client.c, cRequest, cResult, cStatus)
+	C.Pex_CheckSearch(x.client.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 	return x.processResult(cResult, cStatus)
 }
 
-func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus *C.AE_Status) (*PexSearchResult, error) {
-	cMatch := C.AE_SearchMatch_New()
+func (x *PexSearchFuture) processResult(cResult *C.Pex_CheckSearchResult, cStatus *C.Pex_Status) (*PexSearchResult, error) {
+	cMatch := C.Pex_SearchMatch_New()
 	if cMatch == nil {
 		panic("out of memory")
 	}
-	defer C.AE_SearchMatch_Delete(&cMatch)
+	defer C.Pex_SearchMatch_Delete(&cMatch)
 
-	cAsset := C.AE_Asset_New()
+	cAsset := C.Pex_Asset_New()
 	if cAsset == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Asset_Delete(&cAsset)
+	defer C.Pex_Asset_Delete(&cAsset)
 
 	var cMatchesPos C.int = 0
 	var matches []*PexSearchMatch
 
-	for C.AE_CheckSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
+	for C.Pex_CheckSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
 		var cQueryStart C.int64_t
 		var cQueryEnd C.int64_t
 		var cAssetStart C.int64_t
@@ -138,7 +138,7 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 		var cSegmentsPos C.int = 0
 		var segments []*Segment
 
-		for C.AE_SearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cType, &cSegmentsPos) {
+		for C.Pex_SearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cType, &cSegmentsPos) {
 			segments = append(segments, &Segment{
 				Type:       SegmentType(cType),
 				QueryStart: int64(cQueryStart),
@@ -148,7 +148,7 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 			})
 		}
 
-		C.AE_SearchMatch_GetAsset(cMatch, cAsset, cStatus)
+		C.Pex_SearchMatch_GetAsset(cMatch, cAsset, cStatus)
 		if err := statusToError(cStatus); err != nil {
 			return nil, err
 		}
@@ -172,11 +172,11 @@ func (x *PexSearchFuture) processResult(cResult *C.AE_CheckSearchResult, cStatus
 type PexSearchClient struct {
 	fingerprinter
 
-	c *C.AE_Client
+	c *C.Pex_Client
 }
 
 func NewPexSearchClient(clientID, clientSecret string) (*PexSearchClient, error) {
-	cClient, err := newClient(C.AE_PEX_SEARCH, clientID, clientSecret)
+	cClient, err := newClient(C.Pex_PEX_SEARCH, clientID, clientSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (x *PexSearchClient) Close() error {
 	return closeClient(&x.c)
 }
 
-func (x *PexSearchClient) getCClient() *C.AE_Client {
+func (x *PexSearchClient) getCClient() *C.Pex_Client {
 	return x.c
 }
 
@@ -199,44 +199,44 @@ func (x *PexSearchClient) getCClient() *C.AE_Client {
 // the search is finished, it does however perform a network operation
 // to initiate the search on the backend service.
 func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, error) {
-	C.AE_Lock()
-	defer C.AE_Unlock()
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
 
-	cStatus := C.AE_Status_New()
+	cStatus := C.Pex_Status_New()
 	if cStatus == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Status_Delete(&cStatus)
+	defer C.Pex_Status_Delete(&cStatus)
 
-	cRequest := C.AE_StartSearchRequest_New()
+	cRequest := C.Pex_StartSearchRequest_New()
 	if cRequest == nil {
 		panic("out of memory")
 	}
-	defer C.AE_StartSearchRequest_Delete(&cRequest)
+	defer C.Pex_StartSearchRequest_Delete(&cRequest)
 
-	cResult := C.AE_StartSearchResult_New()
+	cResult := C.Pex_StartSearchResult_New()
 	if cResult == nil {
 		panic("out of memory")
 	}
-	defer C.AE_StartSearchResult_Delete(&cResult)
+	defer C.Pex_StartSearchResult_Delete(&cResult)
 
-	cBuffer := C.AE_Buffer_New()
+	cBuffer := C.Pex_Buffer_New()
 	if cBuffer == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Buffer_Delete(&cBuffer)
+	defer C.Pex_Buffer_Delete(&cBuffer)
 
 	ftData := unsafe.Pointer(&req.Fingerprint.b[0])
 	ftSize := C.size_t(len(req.Fingerprint.b))
 
-	C.AE_Buffer_Set(cBuffer, ftData, ftSize)
+	C.Pex_Buffer_Set(cBuffer, ftData, ftSize)
 
-	C.AE_StartSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
+	C.Pex_StartSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
 
-	C.AE_StartSearch(x.c, cRequest, cResult, cStatus)
+	C.Pex_StartSearch(x.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 	var lookupIDs []string
 	var cLookupID *C.char
 
-	for C.AE_StartSearchResult_NextLookupID(cResult, &cLookupIDPos, &cLookupID) {
+	for C.Pex_StartSearchResult_NextLookupID(cResult, &cLookupIDPos, &cLookupID) {
 		lookupIDs = append(lookupIDs, C.GoString(cLookupID))
 	}
 

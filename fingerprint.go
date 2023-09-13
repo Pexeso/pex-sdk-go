@@ -67,16 +67,16 @@ func reduceTypes(in []FingerprintType) (out FingerprintType) {
 }
 
 func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprint, error) {
-	C.AE_Lock()
-	defer C.AE_Unlock()
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
 
-	status := C.AE_Status_New()
+	status := C.Pex_Status_New()
 	if status == nil {
 		panic("out of memory")
 	}
-	defer C.AE_Status_Delete(&status)
+	defer C.Pex_Status_Delete(&status)
 
-	ft := C.AE_Buffer_New()
+	ft := C.Pex_Buffer_New()
 	if ft == nil {
 		panic("out of memory")
 	}
@@ -85,28 +85,28 @@ func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprin
 		cFile := C.CString(string(input))
 		defer C.free(unsafe.Pointer(cFile))
 
-		C.AE_Fingerprint_File_For_Types(cFile, ft, status, C.int(typ))
+		C.Pex_Fingerprint_File_For_Types(cFile, ft, status, C.int(typ))
 	} else {
-		buf := C.AE_Buffer_New()
+		buf := C.Pex_Buffer_New()
 		if buf == nil {
 			panic("out of memory")
 		}
-		defer C.AE_Buffer_Delete(&buf)
+		defer C.Pex_Buffer_Delete(&buf)
 
 		data := unsafe.Pointer(&input[0])
 		size := C.size_t(len(input))
 
-		C.AE_Buffer_Set(buf, data, size)
-		C.AE_Fingerprint_Buffer_For_Types(buf, ft, status, C.int(typ))
+		C.Pex_Buffer_Set(buf, data, size)
+		C.Pex_Fingerprint_Buffer_For_Types(buf, ft, status, C.int(typ))
 	}
 
 	if err := statusToError(status); err != nil {
-		C.AE_Buffer_Delete(&ft)
+		C.Pex_Buffer_Delete(&ft)
 		return nil, err
 	}
 
-	data := C.AE_Buffer_GetData(ft)
-	size := C.int(C.AE_Buffer_GetSize(ft))
+	data := C.Pex_Buffer_GetData(ft)
+	size := C.int(C.Pex_Buffer_GetSize(ft))
 
 	return &Fingerprint{
 		b: C.GoBytes(data, size),
