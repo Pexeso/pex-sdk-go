@@ -4,7 +4,7 @@ package pex
 // first executed because it performs version checks to make sure these
 // bindings are compatible with the native library.
 
-// #cgo pkg-config: pexae
+// #cgo pkg-config: pexsdk
 //
 // #define PEX_SDK_MAJOR_VERSION 4
 // #define PEX_SDK_MINOR_VERSION 0
