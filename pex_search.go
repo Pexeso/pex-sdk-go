@@ -245,3 +245,11 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 		LookupID: C.GoString(C.AE_StartSearchResult_GetLookupID(cResult)),
 	}, nil
 }
+
+func (x *PexSearchClient) CheckSearch(lookupID string) (*PexSearchResult, error) {
+	fut := &PexSearchFuture{
+		client:   x,
+		LookupID: lookupID,
+	}
+	return fut.Get()
+}
