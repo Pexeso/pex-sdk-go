@@ -2,13 +2,16 @@
 
 package pex
 
-// #include <pex/sdk/asset.h>
 // #include <pex/sdk/lock.h>
 // #include <pex/sdk/client.h>
 // #include <pex/sdk/search.h>
 // #include <stdlib.h>
 import "C"
-import "unsafe"
+import (
+	"encoding/json"
+	"fmt"
+	"unsafe"
+)
 
 // Holds all data necessary to perform a pex search. A search can only be
 // performed using a fingerprint, but additional parameters may be supported in
@@ -23,37 +26,31 @@ type PexSearchRequest struct {
 // completion.
 type PexSearchResult struct {
 	// IDs that uniquely identify a particular search. Can be used for diagnostics.
-	LookupIDs []string
+	LookupIDs []string `json:"lookup_ids"`
 
 	// The assets which the query matched against.
-	Matches []*PexSearchMatch
+	Matches []*PexSearchMatch `json:"matches"`
+
+	QueryDurationSeconds float32 `json:"query_duration_seconds"`
 }
 
 type PexSearchAsset struct {
+	ID string `json:"id"`
+
 	// The title of the asset.
-	Title string
+	Title string `json:"title"`
 
 	// The artist who contributed to the asset.
-	Artist string
+	Artist string `json:"artist"`
 
 	// International Standard Recording Code.
-	ISRC string
+	ISRC string `json:"isrc"`
 
 	// The label that owns the asset (e.g. Sony Music Entertainment).
-	Label string
+	Label string `json:"label"`
 
 	// The total duration of the asset in seconds.
-	Duration float32
-}
-
-func newPexSearchAssetFromC(cAsset *C.Pex_Asset) *PexSearchAsset {
-	return &PexSearchAsset{
-		Title:    C.GoString(C.Pex_Asset_GetTitle(cAsset)),
-		Artist:   C.GoString(C.Pex_Asset_GetArtist(cAsset)),
-		ISRC:     C.GoString(C.Pex_Asset_GetISRC(cAsset)),
-		Label:    C.GoString(C.Pex_Asset_GetLabel(cAsset)),
-		Duration: float32(C.Pex_Asset_GetDuration(cAsset)),
-	}
+	DurationSeconds float32 `json:"duration_seconds"`
 }
 
 // PexSearchMatch contains detailed information about the match,
@@ -61,10 +58,10 @@ func newPexSearchAssetFromC(cAsset *C.Pex_Asset) *PexSearchAsset {
 // segments.
 type PexSearchMatch struct {
 	// The asset whose fingerprint matches the query.
-	Asset *PexSearchAsset
+	Asset *PexSearchAsset `json:"asset"`
 
 	// The matching time segments on the query and asset respectively.
-	Segments []*Segment
+	MatchDetails MatchDetails `json:"match_details"`
 }
 
 // PexSearchFuture object is returned by the PexSearchClient.StartSearch
@@ -110,59 +107,22 @@ func (x *PexSearchFuture) Get() (*PexSearchResult, error) {
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
-	return x.processResult(cResult, cStatus)
+	return x.processResult(cResult)
 }
 
-func (x *PexSearchFuture) processResult(cResult *C.Pex_CheckSearchResult, cStatus *C.Pex_Status) (*PexSearchResult, error) {
-	cMatch := C.Pex_SearchMatch_New()
-	if cMatch == nil {
-		panic("out of memory")
-	}
-	defer C.Pex_SearchMatch_Delete(&cMatch)
+func (x *PexSearchFuture) processResult(cResult *C.Pex_CheckSearchResult) (*PexSearchResult, error) {
+	cJSON := C.Pex_CheckSearchResult_GetJSON(cResult)
+	j := C.GoString(cJSON)
 
-	cAsset := C.Pex_Asset_New()
-	if cAsset == nil {
-		panic("out of memory")
-	}
-	defer C.Pex_Asset_Delete(&cAsset)
+	fmt.Println("JSON OUTPUT:", j)
 
-	var cMatchesPos C.int = 0
-	var matches []*PexSearchMatch
-
-	for C.Pex_CheckSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
-		var cQueryStart C.int64_t
-		var cQueryEnd C.int64_t
-		var cAssetStart C.int64_t
-		var cAssetEnd C.int64_t
-		var cType C.int
-		var cSegmentsPos C.int = 0
-		var segments []*Segment
-
-		for C.Pex_SearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cType, &cSegmentsPos) {
-			segments = append(segments, &Segment{
-				Type:       SegmentType(cType),
-				QueryStart: int64(cQueryStart),
-				QueryEnd:   int64(cQueryEnd),
-				AssetStart: int64(cAssetStart),
-				AssetEnd:   int64(cAssetEnd),
-			})
-		}
-
-		C.Pex_SearchMatch_GetAsset(cMatch, cAsset, cStatus)
-		if err := statusToError(cStatus); err != nil {
-			return nil, err
-		}
-
-		matches = append(matches, &PexSearchMatch{
-			Asset:    newPexSearchAssetFromC(cAsset),
-			Segments: segments,
-		})
+	res := new(PexSearchResult)
+	if err := json.Unmarshal([]byte(j), res); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal result: %w", err)
 	}
 
-	return &PexSearchResult{
-		LookupIDs: x.LookupIDs,
-		Matches:   matches,
-	}, nil
+	res.LookupIDs = x.LookupIDs
+	return res, nil
 }
 
 // PexSearchClient serves as an entry point to all operations that

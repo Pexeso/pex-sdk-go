@@ -9,6 +9,8 @@ package pex
 // #include <stdlib.h>
 import "C"
 import (
+	"encoding/json"
+	"fmt"
 	"unsafe"
 )
 
@@ -29,6 +31,8 @@ type PrivateSearchResult struct {
 
 	// The assets which the query matched against.
 	Matches []*PrivateSearchMatch
+
+	QueryDuration float32
 }
 
 // PrivateSearchMatch contains detailed information about the match,
@@ -39,7 +43,7 @@ type PrivateSearchMatch struct {
 	ProvidedID string
 
 	// The matching time segments on the query and asset respectively.
-	Segments []*Segment
+	MatchDetails *MatchDetails
 }
 
 // PrivateSearchFuture object is returned by the Client.StartPrivateSearch
@@ -89,49 +93,18 @@ func (x *PrivateSearchFuture) Get() (*PrivateSearchResult, error) {
 }
 
 func (x *PrivateSearchFuture) processResult(cResult *C.Pex_CheckSearchResult, cStatus *C.Pex_Status) (*PrivateSearchResult, error) {
-	cMatch := C.Pex_SearchMatch_New()
-	if cMatch == nil {
-		panic("out of memory")
-	}
-	defer C.Pex_SearchMatch_Delete(&cMatch)
+	cJSON := C.Pex_CheckSearchResult_GetJSON(cResult)
+	j := C.GoString(cJSON)
 
-	var cMatchesPos C.int = 0
-	var matches []*PrivateSearchMatch
+	fmt.Println("JSON OUTPUT:", j)
 
-	for C.Pex_CheckSearchResult_NextMatch(cResult, cMatch, &cMatchesPos) {
-		var cQueryStart C.int64_t
-		var cQueryEnd C.int64_t
-		var cAssetStart C.int64_t
-		var cAssetEnd C.int64_t
-		var cType C.int
-		var cSegmentsPos C.int = 0
-		var segments []*Segment
-
-		for C.Pex_SearchMatch_NextSegment(cMatch, &cQueryStart, &cQueryEnd, &cAssetStart, &cAssetEnd, &cType, &cSegmentsPos) {
-			segments = append(segments, &Segment{
-				Type:       SegmentType(cType),
-				QueryStart: int64(cQueryStart),
-				QueryEnd:   int64(cQueryEnd),
-				AssetStart: int64(cAssetStart),
-				AssetEnd:   int64(cAssetEnd),
-			})
-		}
-
-		cProvidedID := C.Pex_SearchMatch_GetProvidedID(cMatch, cStatus)
-		if err := statusToError(cStatus); err != nil {
-			return nil, err
-		}
-
-		matches = append(matches, &PrivateSearchMatch{
-			ProvidedID: C.GoString(cProvidedID),
-			Segments:   segments,
-		})
+	res := new(PrivateSearchResult)
+	if err := json.Unmarshal([]byte(j), res); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal result: %w", err)
 	}
 
-	return &PrivateSearchResult{
-		LookupIDs: x.LookupIDs,
-		Matches:   matches,
-	}, nil
+	res.LookupIDs = x.LookupIDs
+	return res, nil
 }
 
 // PrivateSearchClient serves as an entry point to all operations that
