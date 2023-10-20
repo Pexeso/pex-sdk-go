@@ -80,6 +80,7 @@ func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprin
 	if ft == nil {
 		panic("out of memory")
 	}
+	defer C.AE_Buffer_Delete(&ft)
 
 	if isFile {
 		cFile := C.CString(string(input))
@@ -101,7 +102,6 @@ func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprin
 	}
 
 	if err := statusToError(status); err != nil {
-		C.AE_Buffer_Delete(&ft)
 		return nil, err
 	}
 
