@@ -96,8 +96,6 @@ func (x *PrivateSearchFuture) processResult(cResult *C.Pex_CheckSearchResult, cS
 	cJSON := C.Pex_CheckSearchResult_GetJSON(cResult)
 	j := C.GoString(cJSON)
 
-	fmt.Println("JSON OUTPUT:", j)
-
 	res := new(PrivateSearchResult)
 	if err := json.Unmarshal([]byte(j), res); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal result: %w", err)
