@@ -27,12 +27,12 @@ type PrivateSearchRequest struct {
 // completion.
 type PrivateSearchResult struct {
 	// IDs that uniquely identify a particular search. Can be used for diagnostics.
-	LookupIDs []string
+	LookupIDs []string `json:"lookup_ids"`
 
 	// The assets which the query matched against.
-	Matches []*PrivateSearchMatch
+	Matches []*PrivateSearchMatch `json:"matches"`
 
-	QueryDuration float32
+	QueryDurationSeconds float32 `json:"query_duration_seconds"`
 }
 
 // PrivateSearchMatch contains detailed information about the match,
@@ -40,10 +40,10 @@ type PrivateSearchResult struct {
 // segments.
 type PrivateSearchMatch struct {
 	// The ID provided during ingestion.
-	ProvidedID string
+	ProvidedID string `json:"provided_id"`
 
 	// The matching time segments on the query and asset respectively.
-	MatchDetails *MatchDetails
+	MatchDetails *MatchDetails `json:"match_details"`
 }
 
 // PrivateSearchFuture object is returned by the Client.StartPrivateSearch
