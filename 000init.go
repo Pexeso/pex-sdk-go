@@ -5,6 +5,7 @@ package pex
 // bindings are compatible with the native library.
 
 // #cgo pkg-config: pexsdk
+// #cgo LDFLAGS: -Wl,-rpath,/usr/local/lib
 //
 // #define PEX_SDK_MAJOR_VERSION 4
 // #define PEX_SDK_MINOR_VERSION 0
