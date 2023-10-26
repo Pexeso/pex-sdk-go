@@ -51,6 +51,11 @@ type PexSearchAsset struct {
 
 	// The total duration of the asset in seconds.
 	DurationSeconds float32 `json:"duration_seconds"`
+
+	Barcode     string `json:"barcode"`
+	Distributor string `json:"distributor"`
+	Subtitle    string `json:"subtitle"`
+	AlbumName   string `json:"album_name"`
 }
 
 // PexSearchMatch contains detailed information about the match,
