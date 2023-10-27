@@ -81,51 +81,7 @@ type PexSearchFuture struct {
 // also releases all the allocated resources, so it will return an
 // error when called multiple times.
 func (x *PexSearchFuture) Get() (*PexSearchResult, error) {
-	C.Pex_Lock()
-	defer C.Pex_Unlock()
-
-	cStatus := C.Pex_Status_New()
-	if cStatus == nil {
-		panic("out of memory")
-	}
-	defer C.Pex_Status_Delete(&cStatus)
-
-	cRequest := C.Pex_CheckSearchRequest_New()
-	if cRequest == nil {
-		panic("out of memory")
-	}
-	defer C.Pex_CheckSearchRequest_Delete(&cRequest)
-
-	cResult := C.Pex_CheckSearchResult_New()
-	if cResult == nil {
-		panic("out of memory")
-	}
-	defer C.Pex_CheckSearchResult_Delete(&cResult)
-
-	for _, lookupID := range x.LookupIDs {
-		cLookupID := C.CString(lookupID)
-		defer C.free(unsafe.Pointer(cLookupID))
-		C.Pex_CheckSearchRequest_AddLookupID(cRequest, cLookupID)
-	}
-
-	C.Pex_CheckSearch(x.client.c, cRequest, cResult, cStatus)
-	if err := statusToError(cStatus); err != nil {
-		return nil, err
-	}
-	return x.processResult(cResult)
-}
-
-func (x *PexSearchFuture) processResult(cResult *C.Pex_CheckSearchResult) (*PexSearchResult, error) {
-	cJSON := C.Pex_CheckSearchResult_GetJSON(cResult)
-	j := C.GoString(cJSON)
-
-	res := new(PexSearchResult)
-	if err := json.Unmarshal([]byte(j), res); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal result: %w", err)
-	}
-
-	res.LookupIDs = x.LookupIDs
-	return res, nil
+	return x.client.CheckSearch(x.LookupIDs)
 }
 
 // PexSearchClient serves as an entry point to all operations that
@@ -216,4 +172,52 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 		client:    x,
 		LookupIDs: lookupIDs,
 	}, nil
+}
+
+func (x *PexSearchClient) CheckSearch(lookupIDs []string) (*PexSearchResult, error) {
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
+
+	cStatus := C.Pex_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_Status_Delete(&cStatus)
+
+	cRequest := C.Pex_CheckSearchRequest_New()
+	if cRequest == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_CheckSearchRequest_Delete(&cRequest)
+
+	cResult := C.Pex_CheckSearchResult_New()
+	if cResult == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_CheckSearchResult_Delete(&cResult)
+
+	for _, lookupID := range lookupIDs {
+		cLookupID := C.CString(lookupID)
+		defer C.free(unsafe.Pointer(cLookupID))
+		C.Pex_CheckSearchRequest_AddLookupID(cRequest, cLookupID)
+	}
+
+	C.Pex_CheckSearch(x.c, cRequest, cResult, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		return nil, err
+	}
+	return x.processResult(cResult, lookupIDs)
+}
+
+func (x *PexSearchClient) processResult(cResult *C.Pex_CheckSearchResult, lookupIDs []string) (*PexSearchResult, error) {
+	cJSON := C.Pex_CheckSearchResult_GetJSON(cResult)
+	j := C.GoString(cJSON)
+
+	res := new(PexSearchResult)
+	if err := json.Unmarshal([]byte(j), res); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal result: %w", err)
+	}
+
+	res.LookupIDs = lookupIDs
+	return res, nil
 }
