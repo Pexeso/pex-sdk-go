@@ -56,6 +56,11 @@ type PexSearchAsset struct {
 	Distributor string `json:"distributor"`
 	Subtitle    string `json:"subtitle"`
 	AlbumName   string `json:"album_name"`
+	ReleaseDate struct {
+		Year  int `json:"year"`
+		Month int `json:"month"`
+		Day   int `json:"day"`
+	} `json:"release_date"`
 }
 
 // PexSearchMatch contains detailed information about the match,
