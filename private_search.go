@@ -32,7 +32,7 @@ type PrivateSearchResult struct {
 	// The assets which the query matched against.
 	Matches []*PrivateSearchMatch `json:"matches"`
 
-	QueryDurationSeconds float32 `json:"query_duration_seconds"`
+	QueryFileDurationSeconds float32 `json:"query_file_duration_seconds"`
 }
 
 // PrivateSearchMatch contains detailed information about the match,
