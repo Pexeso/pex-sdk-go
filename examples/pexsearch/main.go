@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	pex "github.com/Pexeso/ae-sdk-go/v4"
+	pex "github.com/Pexeso/pex-sdk-go/v4"
 )
 
 const (
