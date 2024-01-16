@@ -38,3 +38,8 @@ type Segment struct {
 
 	DebugInfo any `json:"debug_info,omitempty"`
 }
+
+type DSP struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}

@@ -61,6 +61,8 @@ type PexSearchAsset struct {
 		Month int `json:"month"`
 		Day   int `json:"day"`
 	} `json:"release_date"`
+
+	DSP []*DSP `json:"dsp"`
 }
 
 // PexSearchMatch contains detailed information about the match,
