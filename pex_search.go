@@ -15,7 +15,7 @@ import (
 
 // PexSearchType can optionally be specified in the PexSearchRequest and will
 // allow to retrieve results that are more relevant to the given use-case.
-type PexSearchType int
+type PexSearchType C.Pex_CheckSearchType
 
 const (
 	// IdentifyMusic is a type of PexSearch that will return results that will
