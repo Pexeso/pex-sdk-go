@@ -15,16 +15,16 @@ import (
 
 // PexSearchType can optionally be specified in the PexSearchRequest and will
 // allow to retrieve results that are more relevant to the given use-case.
-type PexSearchType C.Pex_CheckSearchType
+type PexSearchType int
 
 const (
 	// IdentifyMusic is a type of PexSearch that will return results that will
 	// help identify the music in the provided media file.
-	IdentifyMusic = C.Pex_CheckSearchType_IdentifyMusic
+	IdentifyMusic = PexSearchType(C.Pex_CheckSearchType_IdentifyMusic)
 
 	// FindMatches is a type of PexSearch that will return all assets that
 	// matched against the given media file.
-	FindMatches = C.Pex_CheckSearchType_FindMatches
+	FindMatches = PexSearchType(C.Pex_CheckSearchType_FindMatches)
 )
 
 // Holds all data necessary to perform a pex search. A search can only be
