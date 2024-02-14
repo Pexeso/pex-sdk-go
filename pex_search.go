@@ -20,11 +20,11 @@ type PexSearchType int
 const (
 	// IdentifyMusic is a type of PexSearch that will return results that will
 	// help identify the music in the provided media file.
-	IdentifyMusic = PexSearchType(C.Pex_CheckSearchType_IdentifyMusic)
+	IdentifyMusic = PexSearchType(C.Pex_SearchType_IdentifyMusic)
 
 	// FindMatches is a type of PexSearch that will return all assets that
 	// matched against the given media file.
-	FindMatches = PexSearchType(C.Pex_CheckSearchType_FindMatches)
+	FindMatches = PexSearchType(C.Pex_SearchType_FindMatches)
 )
 
 // Holds all data necessary to perform a pex search. A search can only be
@@ -100,14 +100,13 @@ type PexSearchFuture struct {
 	client *PexSearchClient
 
 	LookupIDs []string
-	Type      PexSearchType
 }
 
 // Get blocks until the search result is ready and then returns it. It
 // also releases all the allocated resources, so it will return an
 // error when called multiple times.
 func (x *PexSearchFuture) Get() (*PexSearchResult, error) {
-	return x.client.CheckSearch(x.LookupIDs, x.Type)
+	return x.client.CheckSearch(x.LookupIDs)
 }
 
 // PexSearchClient serves as an entry point to all operations that
@@ -176,6 +175,7 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 
 	C.Pex_Buffer_Set(cBuffer, ftData, ftSize)
 
+	C.Pex_StartSearchRequest_SetType(cRequest, C.Pex_SearchType(req.Type))
 	C.Pex_StartSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
@@ -197,11 +197,10 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 	return &PexSearchFuture{
 		client:    x,
 		LookupIDs: lookupIDs,
-		Type:      req.Type,
 	}, nil
 }
 
-func (x *PexSearchClient) CheckSearch(lookupIDs []string, searchType PexSearchType) (*PexSearchResult, error) {
+func (x *PexSearchClient) CheckSearch(lookupIDs []string) (*PexSearchResult, error) {
 	C.Pex_Lock()
 	defer C.Pex_Unlock()
 
@@ -228,8 +227,6 @@ func (x *PexSearchClient) CheckSearch(lookupIDs []string, searchType PexSearchTy
 		defer C.free(unsafe.Pointer(cLookupID))
 		C.Pex_CheckSearchRequest_AddLookupID(cRequest, cLookupID)
 	}
-
-	C.Pex_CheckSearchRequest_SetType(cRequest, C.Pex_CheckSearchType(searchType))
 
 	C.Pex_CheckSearch(x.c, cRequest, cResult, cStatus)
 	if err := statusToError(cStatus); err != nil {
