@@ -36,6 +36,8 @@ type Segment struct {
 	AudioSpeed          *int64 `json:"audio_speed"`
 	MelodyTransposition *int64 `json:"melody_transposition"`
 
+	Confidence int64 `json:"confidence"`
+
 	DebugInfo any `json:"debug_info,omitempty"`
 }
 
