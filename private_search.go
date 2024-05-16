@@ -228,3 +228,23 @@ func (x *PrivateSearchClient) Ingest(id string, ft *Fingerprint) error {
 	C.Pex_Ingest(x.c, cID, cBuffer, cStatus)
 	return statusToError(cStatus)
 }
+
+// Archive archives a fingerprint that was previously ingested into the private search
+// catalog. The catalog is determined from the authentication credentials used
+// when initializing the client.
+func (x *PrivateSearchClient) Archive(id string, types ...FingerprintType) error {
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
+
+	cStatus := C.Pex_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_Status_Delete(&cStatus)
+
+	cID := C.CString(id)
+	defer C.free(unsafe.Pointer(cID))
+
+	C.Pex_Archive(x.c, cID, C.int(reduceTypes(types)), cStatus)
+	return statusToError(cStatus)
+}
