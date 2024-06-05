@@ -12,106 +12,156 @@
 //
 //	go get github.com/Pexeso/pex-sdk-go/v4
 //
-// # Client
+// # Pex search example
 //
-// Before you can do any operation with the SDK you need to initialize a client.
+//	package main
 //
-//	client, err := pex.NewClient(clientID, clientSecret)
-//	if err != nil {
-//	    panic(err)
-//	}
-//	defer client.Close()
+//	import (
+//		"encoding/json"
+//		"fmt"
 //
-// If you want to test the SDK using the mockserver you need to mock the client:
+//		pex "github.com/Pexeso/pex-sdk-go/v4"
+//	)
 //
-//	if err := pex.MockClient(client); err != nil {
-//	    panic(err)
-//	}
+//	const (
+//		clientID     = "#YOUR_CLIENT_ID_HERE"
+//		clientSecret = "#YOUR_CLIENT_SECRET_HERE"
+//		inputFile    = "/path/to/file.mp3"
+//	)
 //
-// # Fingerprinting
+//	func main() {
+//		// Initialize and authenticate the client.
+//		client, err := pex.NewPexSearchClient(clientID, clientSecret)
+//		if err != nil {
+//			panic(err)
+//		}
+//		defer client.Close()
 //
-// A fingerprint is how the SDK identifies a piece of digital content.
-// It can be generated from a media file or from a memory buffer. The
-// content must be encoded in one of the supported formats and must be
-// longer than 1 second.
+//		// Optionally mock the client. If a client is mocked, it will only communicate
+//		// with the local mockserver instead of production servers. This is useful for
+//		// testing.
+//		if err := pex.MockClient(client); err != nil {
+//			panic(err)
+//		}
 //
-// You can generate a fingerprint from a media file:
+//		// Fingerprint a file. You can also fingerprint a buffer with
+//		//
+//		//   client.FingerprintBuffer([]byte).
+//		//
+//		// Both the files and the memory buffers
+//		// must be valid media content in following formats:
+//		//
+//		//   Audio: aac
+//		//   Video: h264, h265
+//		//
+//		// Keep in mind that generating a fingerprint is CPU bound operation and
+//		// might consume a significant amount of your CPU time.
+//		ft, err := client.FingerprintFile(inputFile)
+//		if err != nil {
+//			panic(err)
+//		}
 //
-//	ft, err := client.FingerprintFile("/path/to/file.mp4")
-//	if err != nil {
-//	    panic(err)
-//	}
+//		// Build the request.
+//		req := &pex.PexSearchRequest{
+//			Fingerprint: ft,
+//		}
 //
-// Or you can generate a fingerprint from a memory buffer:
+//		// Start the search.
+//		fut, err := client.StartSearch(req)
+//		if err != nil {
+//			panic(err)
+//		}
 //
-//	b, _ := ioutil.ReadFile("/path/to/file.mp4")
+//		// Retrieve the result.
+//		res, err := fut.Get()
+//		if err != nil {
+//			panic(err)
+//		}
 //
-//	ft, err := pex.FingerprintBuffer(b)
-//	if err != nil {
-//	    panic(err)
-//	}
-//
-// If you only want to use certain types of fingerprinting, you can
-// specify that as well:
-//
-//	ft1, _ := client.FingerprintFileForTypes("/path/to/file.mp4", pex.FingerprintTypeAudio)
-//	ft2, _ := client.FingerprintBufferForTypes(b, pex.FingerprintTypeVideo|pex.FingerprintTypeMelody)
-//
-// Both the files and the memory buffers must be valid media content in
-// following formats:
-//
-//	Audio: aac
-//	Video: h264, h265
-//
-// Keep in mind that generating a fingerprint is CPU bound operation and
-// might consume a significant amount of your CPU time.
-//
-// # Metadata search
-//
-// After the fingerprint is generated, you can use it to perform a metadata search.
-//
-//	// Build the request.
-//	req := &pex.MetadataSearchRequest{
-//	    Fingerprint: ft,
-//	}
-//
-//	// Start the search.
-//	fut, err := client.StartMetadataSearch(req)
-//	if err != nil {
-//	    panic(err)
-//	}
-//
-//	// Do other stuff.
-//
-//	// Retrieve the result.
-//	res, err := fut.Get()
-//	if err != nil {
-//	    panic(err)
+//		// Print the result.
+//		j, err := json.MarshalIndent(res, "", "  ")
+//		if err != nil {
+//			panic(err)
+//		}
+//		fmt.Println(string(j))
 //	}
 //
-//	// Print the result.
-//	fmt.Printf("%+v\n", res)
+// # Private search
 //
-// # License search
+//	package main
 //
-// Performing a license search is very similar to metadata search.
+//	import (
+//		"encoding/json"
+//		"fmt"
 //
-//	// ...
+//		pex "github.com/Pexeso/pex-sdk-go/v4"
+//	)
 //
-//	// Build the request.
-//	req := &pex.LicenseSearchRequest{
-//	    Fingerprint: ft,
+//	const (
+//		clientID     = "#YOUR_CLIENT_ID_HERE"
+//		clientSecret = "#YOUR_CLIENT_SECRET_HERE"
+//		inputFile    = "/path/to/file.mp3"
+//	)
+//
+//	func main() {
+//		// Initialize and authenticate the client.
+//		client, err := pex.NewPrivateSearchClient(clientID, clientSecret)
+//		if err != nil {
+//			panic(err)
+//		}
+//		defer client.Close()
+//
+//		// Optionally mock the client. If a client is mocked, it will only communicate
+//		// with the local mockserver instead of production servers. This is useful for
+//		// testing.
+//		if err := pex.MockClient(client); err != nil {
+//			panic(err)
+//		}
+//
+//		// Fingerprint a file. You can also fingerprint a buffer with
+//		//
+//		//   client.FingerprintBuffer([]byte).
+//		//
+//		// Both the files and the memory buffers
+//		// must be valid media content in following formats:
+//		//
+//		//   Audio: aac
+//		//   Video: h264, h265
+//		//
+//		// Keep in mind that generating a fingerprint is CPU bound operation and
+//		// might consume a significant amount of your CPU time.
+//		ft, err := client.FingerprintFile(inputFile)
+//		if err != nil {
+//			panic(err)
+//		}
+//
+//		// Ingest it into your private catalog.
+//		if err := client.Ingest("my_id_1", ft); err != nil {
+//			panic(err)
+//		}
+//
+//		// Build the request.
+//		req := &pex.PrivateSearchRequest{
+//			Fingerprint: ft,
+//		}
+//
+//		// Start the search.
+//		fut, err := client.StartSearch(req)
+//		if err != nil {
+//			panic(err)
+//		}
+//
+//		// Retrieve the result.
+//		res, err := fut.Get()
+//		if err != nil {
+//			panic(err)
+//		}
+//
+//		// Print the result.
+//		j, err := json.MarshalIndent(res, "", "  ")
+//		if err != nil {
+//			panic(err)
+//		}
+//		fmt.Println(string(j))
 //	}
-//
-//	// Start the search.
-//	fut, err := client.StartLicenseSearch(req)
-//	if err != nil {
-//	    panic(err)
-//	}
-//
-//	// ...
-//
-// The most significant difference between the searches currently is in the
-// results they return. See MetadataSearchResult and LicenseSearchResult for
-// more information.
 package pex
