@@ -12,7 +12,7 @@ import (
 
 const (
 	clientID     = "A9c30H96v6ke1iZdKGylThNUZxpH7FnC"
-	clientSecret = "https://pwpush.com/p/wqiznrriw8o2-q/r"
+	clientSecret = ""
 	inputFile    = "/path/to/file.mp3"
 )
 
@@ -58,9 +58,9 @@ func main() {
 	// Optionally mock the client. If a client is mocked, it will only communicate
 	// with the local mockserver instead of production servers. This is useful for
 	// testing.
-	if err := pex.MockClient(client); err != nil {
-		panic(err)
-	}
+	//if err := pex.MockClient(client); err != nil {
+	//	panic(err)
+	//}
 
 	// Fingerprint a file. You can also fingerprint a buffer with
 	//
@@ -75,16 +75,20 @@ func main() {
 	// Keep in mind that generating a fingerprint is CPU bound operation and
 	// might consume a significant amount of your CPU time.
 
-	dir := "06_12_2023_1"
+	dir := "06_12_2023_2"
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		panic(err)
 	}
 	for _, f := range files {
+		//f := files[3]
 		ft, err := client.FingerprintFile(fmt.Sprintf("./%s/%s", dir, f.Name()))
 		if err != nil {
 			panic(err)
 		}
+
+		//fmt.Println(ft)
+		fmt.Println(fmt.Sprintf("./%s/%s", dir, f.Name()))
 
 		// Build the request.
 		req := &pex.PexSearchRequest{
@@ -117,25 +121,32 @@ func main() {
 		}
 
 		//Write the CSV data
-		ff, err := os.Create(fmt.Sprintf("%s.csv", strings.TrimSuffix(f.Name(), ".flac")))
+		outputFileName := fmt.Sprintf("%s.csv", strings.TrimSuffix(f.Name(), ".flac"))
+		ff, err := os.Create(outputFileName)
 		if err != nil {
 			panic(err)
 		}
-		defer ff.Close()
 
 		mWriter := csv.NewWriter(ff)
 		mWriter.UseCRLF = true
-		defer mWriter.Flush()
 
 		y := data.Matches
 		sort.Slice(y, func(i, j int) bool {
+			if len(y[i].MatchDetails.Audio.Segments) == 0 {
+				return true
+			}
+			if len(y[j].MatchDetails.Audio.Segments) == 0 {
+				return false
+			}
 			return y[i].MatchDetails.Audio.Segments[0].QueryStart < y[j].MatchDetails.Audio.Segments[0].QueryStart
 		})
+
+		fmt.Println(y)
 
 		// write
 		for _, m := range y {
 			for _, s := range m.MatchDetails.Audio.Segments {
-				filename := "pretest.flac"
+				filename := f.Name()
 				var confidence int
 				if s.Confidence == 100 {
 					confidence = 99
@@ -161,10 +172,12 @@ func main() {
 
 			}
 		}
+		mWriter.Flush()
+		ff.Close()
 
-		if f.Name() == "06_12_2023_152143.combined_stream.flac" {
-			break
-		}
+		//if f.Name() == "06_12_2023_152311.combined_stream.flac" {
+		//	break
+		//}
 	}
 
 }
