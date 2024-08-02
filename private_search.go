@@ -248,3 +248,82 @@ func (x *PrivateSearchClient) Archive(id string, types ...FingerprintType) error
 	C.Pex_Archive(x.c, cID, C.int(reduceTypes(types)), cStatus)
 	return statusToError(cStatus)
 }
+
+type Entry struct {
+	ProvidedID       string            `json:"provided_id"`
+	FingerprintTypes []FingerprintType `json:"fingerprint_types"`
+}
+
+type ListEntriesRequest struct {
+	Limit int
+	After string
+}
+
+type ListEntriesResult struct {
+	Entries     []Entry `json:"entries"`
+	EndCursor   string  `json:"end_cursor"`
+	HasNextPage bool    `json:"has_next_page"`
+}
+
+type Lister struct {
+	c *C.Pex_Client
+
+	Limit       int
+	EndCursor   string
+	HasNextPage bool
+}
+
+func (x *Lister) List() ([]Entry, error) {
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
+
+	cReq := C.Pex_ListRequest_New()
+	if cReq == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_ListRequest_Delete(&cReq)
+
+	cRes := C.Pex_ListResult_New()
+	if cRes == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_ListResult_Delete(&cRes)
+
+	cStatus := C.Pex_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_Status_Delete(&cStatus)
+
+	cAfter := C.CString(x.EndCursor)
+	defer C.free(unsafe.Pointer(cAfter))
+
+	C.Pex_ListRequest_SetLimit(cReq, C.int(x.Limit))
+	C.Pex_ListRequest_SetAfter(cReq, cAfter)
+
+	C.Pex_List(x.c, cReq, cRes, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		return nil, err
+	}
+
+	j := C.GoString(C.Pex_ListResult_GetJSON(cRes))
+
+	var res ListEntriesResult
+	if err := json.Unmarshal([]byte(j), &res); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json: %w", err)
+	}
+
+	x.EndCursor = res.EndCursor
+	x.HasNextPage = res.HasNextPage
+
+	return res.Entries, nil
+}
+
+func (x *PrivateSearchClient) ListEntries(req *ListEntriesRequest) *Lister {
+	return &Lister{
+		c:           x.c,
+		Limit:       req.Limit,
+		EndCursor:   req.After,
+		HasNextPage: true,
+	}
+}
