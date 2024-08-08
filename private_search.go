@@ -89,10 +89,10 @@ func (x *PrivateSearchFuture) Get() (*PrivateSearchResult, error) {
 	if err := statusToError(cStatus); err != nil {
 		return nil, err
 	}
-	return x.processResult(cResult, cStatus)
+	return x.processResult(cResult)
 }
 
-func (x *PrivateSearchFuture) processResult(cResult *C.Pex_CheckSearchResult, cStatus *C.Pex_Status) (*PrivateSearchResult, error) {
+func (x *PrivateSearchFuture) processResult(cResult *C.Pex_CheckSearchResult) (*PrivateSearchResult, error) {
 	cJSON := C.Pex_CheckSearchResult_GetJSON(cResult)
 	j := C.GoString(cJSON)
 
@@ -121,6 +121,9 @@ func NewPrivateSearchClient(clientID, clientSecret string) (*PrivateSearchClient
 		return nil, err
 	}
 	return &PrivateSearchClient{
+		fingerprinter: fingerprinter{
+			c: cClient,
+		},
 		c: cClient,
 	}, nil
 }
