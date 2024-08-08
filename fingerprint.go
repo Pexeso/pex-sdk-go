@@ -36,7 +36,9 @@ func NewFingerprint(b []byte) *Fingerprint {
 	}
 }
 
-type fingerprinter struct{}
+type fingerprinter struct {
+	c *C.Pex_Client
+}
 
 // FingerprintFile is used to generate a fingerprint from a
 // file stored on a disk. The path parameter must be a path
@@ -44,7 +46,7 @@ type fingerprinter struct{}
 // specifies which types of fingerprints to create. If not
 // types are provided, FingerprintTypeAll is assumed.
 func (x *fingerprinter) FingerprintFile(path string, types ...FingerprintType) (*Fingerprint, error) {
-	return newFingerprint([]byte(path), true, reduceTypes(types))
+	return x.newFingerprint([]byte(path), true, reduceTypes(types))
 }
 
 // FingerprintBuffer is used to generate a fingerprint from a
@@ -52,7 +54,7 @@ func (x *fingerprinter) FingerprintFile(path string, types ...FingerprintType) (
 // specifies which types of fingerprints to create. If not
 // types are provided, FingerprintTypeAll is assumed.
 func (x *fingerprinter) FingerprintBuffer(buffer []byte, types ...FingerprintType) (*Fingerprint, error) {
-	return newFingerprint(buffer, false, reduceTypes(types))
+	return x.newFingerprint(buffer, false, reduceTypes(types))
 }
 
 func reduceTypes(in []FingerprintType) (out FingerprintType) {
@@ -66,7 +68,7 @@ func reduceTypes(in []FingerprintType) (out FingerprintType) {
 	return out
 }
 
-func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprint, error) {
+func (x *fingerprinter) newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprint, error) {
 	C.Pex_Lock()
 	defer C.Pex_Unlock()
 
@@ -85,7 +87,7 @@ func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprin
 		cFile := C.CString(string(input))
 		defer C.free(unsafe.Pointer(cFile))
 
-		C.Pex_Fingerprint_File(cFile, ft, status, C.int(typ))
+		C.Pex_FingerprintFile(x.c, cFile, ft, status, C.int(typ))
 	} else {
 		buf := C.Pex_Buffer_New()
 		if buf == nil {
@@ -97,7 +99,7 @@ func newFingerprint(input []byte, isFile bool, typ FingerprintType) (*Fingerprin
 		size := C.size_t(len(input))
 
 		C.Pex_Buffer_Set(buf, data, size)
-		C.Pex_Fingerprint_Buffer(buf, ft, status, C.int(typ))
+		C.Pex_FingerprintBuffer(x.c, buf, ft, status, C.int(typ))
 	}
 
 	if err := statusToError(status); err != nil {

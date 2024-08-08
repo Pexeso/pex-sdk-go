@@ -125,6 +125,9 @@ func NewPexSearchClient(clientID, clientSecret string) (*PexSearchClient, error)
 		return nil, err
 	}
 	return &PexSearchClient{
+		fingerprinter: fingerprinter{
+			c: cClient,
+		},
 		c: cClient,
 	}, nil
 }
