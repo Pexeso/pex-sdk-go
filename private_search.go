@@ -14,7 +14,7 @@ import (
 	"unsafe"
 )
 
-// Holds all data necessary to perform a private search. A search can only be
+// PrivateSearchRequest holds all data necessary to perform a private search. A search can only be
 // performed using a fingerprint, but additional parameters may be supported in
 // the future.
 type PrivateSearchRequest struct {
@@ -23,7 +23,7 @@ type PrivateSearchRequest struct {
 	Fingerprint *Fingerprint
 }
 
-// This object is returned from PrivateSearchFuture.Get upon successful
+// PrivateSearchResult is returned from PrivateSearchFuture.Get upon successful
 // completion.
 type PrivateSearchResult struct {
 	// IDs that uniquely identify a particular search. Can be used for diagnostics.
@@ -249,22 +249,37 @@ func (x *PrivateSearchClient) Archive(id string, types ...FingerprintType) error
 	return statusToError(cStatus)
 }
 
+// Entry represents an asset ingested into a private catalog and will be
+// returned by the Lister when listing all the ingested assets.
 type Entry struct {
-	ProvidedID       string            `json:"provided_id"`
+	// ProvidedID represents and ID that was provided during ingestion using the
+	// Ingest() function.
+	ProvidedID string `json:"provided_id"`
+
+	// FingerprintTypes lists all the fingerprint types (audio, video or melody)
+	// that were provided during ingestion.
 	FingerprintTypes []FingerprintType `json:"fingerprint_types"`
 }
 
+// ListEntriesRequest must be passed to the List() function when listing all
+// the ingested assets in the catalog. It allows the user to specify some
+// options that will narrow the listing down which is important especially for
+// large catalogs.
 type ListEntriesRequest struct {
 	Limit int
 	After string
 }
 
-type ListEntriesResult struct {
+type listEntriesResult struct {
 	Entries     []Entry `json:"entries"`
 	EndCursor   string  `json:"end_cursor"`
 	HasNextPage bool    `json:"has_next_page"`
 }
 
+// Lister is an object returned by the List() functions when listing all the
+// ingested assets. It represents a sort of paginator that will allow the user
+// to retrieve the entries in smaller chunks, which is important if the catalog
+// contains too many entries.
 type Lister struct {
 	c *C.Pex_Client
 
@@ -273,6 +288,7 @@ type Lister struct {
 	HasNextPage bool
 }
 
+// List grabs the next "page" and returns entries.
 func (x *Lister) List() ([]Entry, error) {
 	C.Pex_Lock()
 	defer C.Pex_Unlock()
@@ -308,7 +324,7 @@ func (x *Lister) List() ([]Entry, error) {
 
 	j := C.GoString(C.Pex_ListResult_GetJSON(cRes))
 
-	var res ListEntriesResult
+	var res listEntriesResult
 	if err := json.Unmarshal([]byte(j), &res); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 	}
@@ -319,6 +335,8 @@ func (x *Lister) List() ([]Entry, error) {
 	return res.Entries, nil
 }
 
+// ListEntries initiates listing of the catalog and returns a Lister that can
+// be used to retrieve the entries.
 func (x *PrivateSearchClient) ListEntries(req *ListEntriesRequest) *Lister {
 	return &Lister{
 		c:           x.c,

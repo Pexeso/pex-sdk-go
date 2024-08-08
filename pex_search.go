@@ -27,7 +27,7 @@ const (
 	FindMatches = PexSearchType(C.Pex_SearchType_FindMatches)
 )
 
-// Holds all data necessary to perform a pex search. A search can only be
+// PexSearchRequest holds all data necessary to perform a pex search. A search can only be
 // performed using a fingerprint, but additional parameters may be supported in
 // the future.
 type PexSearchRequest struct {
@@ -40,7 +40,7 @@ type PexSearchRequest struct {
 	Type PexSearchType
 }
 
-// This object is returned from PexSearchFuture.Get upon successful
+// PexSearchResult is returned from PexSearchFuture.Get upon successful
 // completion.
 type PexSearchResult struct {
 	// IDs that uniquely identify a particular search. Can be used for diagnostics.
