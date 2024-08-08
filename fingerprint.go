@@ -6,10 +6,34 @@ package pex
 // #include <pex/sdk/lock.h>
 // #include <pex/sdk/fingerprint.h>
 import "C"
-import "unsafe"
+import (
+	"encoding/json"
+	"errors"
+	"unsafe"
+)
 
 // FingerprintType is a bit flag specifying one or more fingerprint types.
 type FingerprintType int
+
+func (x *FingerprintType) UnmarshalJSON(data []byte) error {
+	var temp string
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+	switch temp {
+	case "video":
+		*x = FingerprintTypeVideo
+	case "audio":
+		*x = FingerprintTypeAudio
+	case "melody":
+		*x = FingerprintTypeMelody
+	default:
+		return errors.New("invalid fingerprint_type value")
+	}
+
+	return nil
+}
 
 const (
 	FingerprintTypeVideo  FingerprintType = 1
