@@ -11,18 +11,19 @@ import "fmt"
 type StatusCode int
 
 const (
-	StatusOK               = StatusCode(0)
-	StatusDeadlineExceeded = StatusCode(1)
-	StatusPermissionDenied = StatusCode(2)
-	StatusUnauthenticated  = StatusCode(3)
-	StatusNotFound         = StatusCode(4)
-	StatusInvalidInput     = StatusCode(5)
-	StatusOutOfMemory      = StatusCode(6)
-	StatusInternalError    = StatusCode(7)
-	StatusNotInitialized   = StatusCode(8)
-	StatusConnectionError  = StatusCode(9)
-	StatusLookupFailed     = StatusCode(10)
-	StatusLookupTimedOut   = StatusCode(11)
+	StatusOK                = StatusCode(0)
+	StatusDeadlineExceeded  = StatusCode(1)
+	StatusPermissionDenied  = StatusCode(2)
+	StatusUnauthenticated   = StatusCode(3)
+	StatusNotFound          = StatusCode(4)
+	StatusInvalidInput      = StatusCode(5)
+	StatusOutOfMemory       = StatusCode(6)
+	StatusInternalError     = StatusCode(7)
+	StatusNotInitialized    = StatusCode(8)
+	StatusConnectionError   = StatusCode(9)
+	StatusLookupFailed      = StatusCode(10)
+	StatusLookupTimedOut    = StatusCode(11)
+	StatusResourceExhausted = StatusCode(12)
 )
 
 // Error will be returend by most SDK functions. Besides an error
@@ -30,8 +31,9 @@ const (
 // determine the underlying issue, e.g. AssetLibrary.GetAsset will return
 // an error with StatusNotFound if the asset couldn't be found.
 type Error struct {
-	Code    StatusCode
-	Message string
+	Code        StatusCode
+	Message     string
+	IsRetryable bool
 }
 
 func (e *Error) Error() string {
@@ -41,8 +43,9 @@ func (e *Error) Error() string {
 func statusToError(status *C.Pex_Status) error {
 	if !C.Pex_Status_OK(status) {
 		return &Error{
-			Code:    StatusCode(C.Pex_Status_GetCode(status)),
-			Message: C.GoString(C.Pex_Status_GetMessage(status)),
+			Code:        StatusCode(C.Pex_Status_GetCode(status)),
+			Message:     C.GoString(C.Pex_Status_GetMessage(status)),
+			IsRetryable: bool(C.Pex_Status_IsRetryable(status)),
 		}
 	}
 	return nil
