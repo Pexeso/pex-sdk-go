@@ -3,9 +3,10 @@
 package pex
 
 type MatchDetails struct {
-	Audio  *SegmentDetails `json:"audio"`
-	Melody *SegmentDetails `json:"melody"`
-	Video  *SegmentDetails `json:"video"`
+	Audio    *SegmentDetails `json:"audio"`
+	Melody   *SegmentDetails `json:"melody"`
+	Video    *SegmentDetails `json:"video"`
+	Phonetic *SegmentDetails `json:"phonetic"`
 }
 
 type SegmentDetails struct {
