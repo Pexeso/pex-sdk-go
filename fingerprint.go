@@ -28,6 +28,8 @@ func (x *FingerprintType) UnmarshalJSON(data []byte) error {
 		*x = FingerprintTypeAudio
 	case "melody":
 		*x = FingerprintTypeMelody
+	case "phonetic":
+		*x = FingerprintTypePhonetic
 	default:
 		return errors.New("invalid fingerprint_type value")
 	}
