@@ -30,6 +30,8 @@ func (x *FingerprintType) UnmarshalJSON(data []byte) error {
 		*x = FingerprintTypeMelody
 	case "phonetic":
 		*x = FingerprintTypePhonetic
+	case "class":
+		*x = FingerprintTypeClass
 	default:
 		return errors.New("invalid fingerprint_type value")
 	}
@@ -42,6 +44,7 @@ const (
 	FingerprintTypeAudio    FingerprintType = 2
 	FingerprintTypeMelody   FingerprintType = 4
 	FingerprintTypePhonetic FingerprintType = 8
+	FingerprintTypeClass    FingerprintType = 16
 	FingerprintTypeAll                      = FingerprintTypeAudio | FingerprintTypeMelody | FingerprintTypePhonetic
 )
 
