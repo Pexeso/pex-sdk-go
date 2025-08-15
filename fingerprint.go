@@ -28,6 +28,10 @@ func (x *FingerprintType) UnmarshalJSON(data []byte) error {
 		*x = FingerprintTypeAudio
 	case "melody":
 		*x = FingerprintTypeMelody
+	case "phonetic":
+		*x = FingerprintTypePhonetic
+	case "class":
+		*x = FingerprintTypeClass
 	default:
 		return errors.New("invalid fingerprint_type value")
 	}
@@ -36,10 +40,12 @@ func (x *FingerprintType) UnmarshalJSON(data []byte) error {
 }
 
 const (
-	FingerprintTypeVideo  FingerprintType = 1
-	FingerprintTypeAudio  FingerprintType = 2
-	FingerprintTypeMelody FingerprintType = 4
-	FingerprintTypeAll                    = FingerprintTypeVideo | FingerprintTypeAudio | FingerprintTypeMelody
+	FingerprintTypeVideo    FingerprintType = 1
+	FingerprintTypeAudio    FingerprintType = 2
+	FingerprintTypeMelody   FingerprintType = 4
+	FingerprintTypePhonetic FingerprintType = 8
+	FingerprintTypeClass    FingerprintType = 16
+	FingerprintTypeAll                      = FingerprintTypeAudio | FingerprintTypeMelody | FingerprintTypePhonetic
 )
 
 // Fingerprint is how the SDK identifies a piece of digital content.

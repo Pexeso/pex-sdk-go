@@ -32,7 +32,11 @@ type PrivateSearchResult struct {
 	// The assets which the query matched against.
 	Matches []*PrivateSearchMatch `json:"matches"`
 
+	// The duration of the query file used to run the search, in seconds.
 	QueryFileDurationSeconds float32 `json:"query_file_duration_seconds"`
+
+	// The content classification of the query file, e.g. "music", "silence", "speech".
+	ContentClassification ContentClassification `json:"content_classification"`
 }
 
 // PrivateSearchMatch contains detailed information about the match,

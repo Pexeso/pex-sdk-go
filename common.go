@@ -2,10 +2,29 @@
 
 package pex
 
+type ContentClassificationSubclass struct {
+	Name       string  `json:"name"`
+	Confidence float32 `json:"confidence"`
+}
+
+type ContentClassificationSegment struct {
+	Start      int64                           `json:"start"`
+	End        int64                           `json:"end"`
+	Confidence float32                         `json:"confidence"`
+	Subclasses []ContentClassificationSubclass `json:"subclasses"`
+}
+
+type ContentClassification struct {
+	Music   []ContentClassificationSegment `json:"music"`
+	Speech  []ContentClassificationSegment `json:"speech"`
+	Silence []ContentClassificationSegment `json:"silence"`
+}
+
 type MatchDetails struct {
-	Audio  *SegmentDetails `json:"audio"`
-	Melody *SegmentDetails `json:"melody"`
-	Video  *SegmentDetails `json:"video"`
+	Audio    *SegmentDetails `json:"audio"`
+	Melody   *SegmentDetails `json:"melody"`
+	Video    *SegmentDetails `json:"video"`
+	Phonetic *SegmentDetails `json:"phonetic"`
 }
 
 type SegmentDetails struct {
