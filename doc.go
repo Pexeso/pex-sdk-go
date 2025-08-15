@@ -37,13 +37,6 @@
 //		}
 //		defer client.Close()
 //
-//		// Optionally mock the client. If a client is mocked, it will only communicate
-//		// with the local mockserver instead of production servers. This is useful for
-//		// testing.
-//		if err := pex.MockClient(client); err != nil {
-//			panic(err)
-//		}
-//
 //		// Fingerprint a file. You can also fingerprint a buffer with
 //		//
 //		//   client.FingerprintBuffer([]byte).
@@ -110,13 +103,6 @@
 //			panic(err)
 //		}
 //		defer client.Close()
-//
-//		// Optionally mock the client. If a client is mocked, it will only communicate
-//		// with the local mockserver instead of production servers. This is useful for
-//		// testing.
-//		if err := pex.MockClient(client); err != nil {
-//			panic(err)
-//		}
 //
 //		// Fingerprint a file. You can also fingerprint a buffer with
 //		//
