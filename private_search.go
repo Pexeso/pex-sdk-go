@@ -260,6 +260,43 @@ func (x *PrivateSearchClient) Archive(id string, types ...FingerprintType) error
 	return statusToError(cStatus)
 }
 
+type EntryStatus int
+
+func (x *EntryStatus) UnmarshalJSON(data []byte) error {
+	var temp string
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+	switch temp {
+	case "ready":
+		*x = EntryStatusReady
+	case "pending":
+		*x = EntryStatusPending
+	default:
+		*x = EntryStatusUnknown
+	}
+
+	return nil
+}
+
+func (x EntryStatus) String() string {
+	switch x {
+	case EntryStatusReady:
+		return "ready"
+	case EntryStatusPending:
+		return "pending"
+	default:
+		return "unknown"
+	}
+}
+
+const (
+	EntryStatusUnknown EntryStatus = 0
+	EntryStatusReady   EntryStatus = 1
+	EntryStatusPending EntryStatus = 2
+)
+
 // Entry represents an asset ingested into a private catalog and will be
 // returned by the Lister when listing all the ingested assets.
 type Entry struct {
@@ -270,6 +307,9 @@ type Entry struct {
 	// FingerprintTypes lists all the fingerprint types (audio, video or melody)
 	// that were provided during ingestion.
 	FingerprintTypes []FingerprintType `json:"fingerprint_types"`
+
+	// Status represents the status of the entry (ready, pending, ...).
+	Status EntryStatus `json:"status"`
 }
 
 // ListEntriesRequest must be passed to the List() function when listing all
@@ -355,4 +395,37 @@ func (x *PrivateSearchClient) ListEntries(req *ListEntriesRequest) *Lister {
 		EndCursor:   req.After,
 		HasNextPage: true,
 	}
+}
+
+func (x *PrivateSearchClient) GetEntry(id string) (*Entry, error) {
+	C.Pex_Lock()
+	defer C.Pex_Unlock()
+
+	cJSON := C.Pex_Buffer_New()
+	if cJSON == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_Buffer_Delete(&cJSON)
+
+	cStatus := C.Pex_Status_New()
+	if cStatus == nil {
+		panic("out of memory")
+	}
+	defer C.Pex_Status_Delete(&cStatus)
+
+	cID := C.CString(id)
+	defer C.free(unsafe.Pointer(cID))
+
+	C.Pex_Get(x.c, cID, cJSON, cStatus)
+	if err := statusToError(cStatus); err != nil {
+		return nil, err
+	}
+
+	j := C.GoString((*C.char)(C.Pex_Buffer_GetData(cJSON)))
+
+	entry := new(Entry)
+	if err := json.Unmarshal([]byte(j), &entry); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json: %w", err)
+	}
+	return entry, nil
 }
