@@ -427,5 +427,6 @@ func (x *PrivateSearchClient) GetEntry(id string) (*Entry, error) {
 	if err := json.Unmarshal([]byte(j), &entry); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal json: %w", err)
 	}
+	entry.ProvidedID = id
 	return entry, nil
 }
