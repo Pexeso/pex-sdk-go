@@ -94,10 +94,6 @@ func (x *PrivateSearchClient) Close() error {
 	return closeClient(&x.c)
 }
 
-func (x *PrivateSearchClient) getCClient() *C.Pex_Client {
-	return x.c
-}
-
 // StartSearch starts a private search. This operation does not block until
 // the search is finished, it does however perform a network operation
 // to initiate the search on the backend service.

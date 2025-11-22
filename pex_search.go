@@ -40,6 +40,19 @@ type PexSearchRequest struct {
 	Type PexSearchType
 }
 
+// ISRCSearchRequest holds all data necessary to perform a pex search using an ISRC.
+type ISRCSearchRequest struct {
+	// ISRC of the asset used for searching.
+	ISRC string
+
+	// FingerprintTypes specifies which fingerprint types should be used.
+	FingerprintTypes []FingerprintType
+
+	// Type is optional and when specified will allow to retrieve results that
+	// are more relevant to the given use-case.
+	Type PexSearchType
+}
+
 // PexSearchResult is returned from PexSearchFuture.Get upon successful
 // completion.
 type PexSearchResult struct {
@@ -142,14 +155,21 @@ func (x *PexSearchClient) Close() error {
 	return closeClient(&x.c)
 }
 
-func (x *PexSearchClient) getCClient() *C.Pex_Client {
-	return x.c
+// StartSearch starts a Pex search using an ISRC. This operation does not block until
+// the search is finished, it does however perform a network operation
+// to initiate the search on the backend service.
+func (x *PexSearchClient) StartISRCSearch(req *ISRCSearchRequest) (*PexSearchFuture, error) {
+	return x.startSearch(nil, req)
 }
 
 // StartSearch starts a Pex search. This operation does not block until
 // the search is finished, it does however perform a network operation
 // to initiate the search on the backend service.
 func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, error) {
+	return x.startSearch(req, nil)
+}
+
+func (x *PexSearchClient) startSearch(ftReq *PexSearchRequest, isrcReq *ISRCSearchRequest) (*PexSearchFuture, error) {
 	C.Pex_Lock()
 	defer C.Pex_Unlock()
 
@@ -171,21 +191,30 @@ func (x *PexSearchClient) StartSearch(req *PexSearchRequest) (*PexSearchFuture, 
 	}
 	defer C.Pex_StartSearchResult_Delete(&cResult)
 
-	cBuffer := C.Pex_Buffer_New()
-	if cBuffer == nil {
-		panic("out of memory")
-	}
-	defer C.Pex_Buffer_Delete(&cBuffer)
+	if ftReq != nil {
+		cBuffer := C.Pex_Buffer_New()
+		if cBuffer == nil {
+			panic("out of memory")
+		}
+		defer C.Pex_Buffer_Delete(&cBuffer)
 
-	ftData := unsafe.Pointer(&req.Fingerprint.b[0])
-	ftSize := C.size_t(len(req.Fingerprint.b))
+		ftData := unsafe.Pointer(&ftReq.Fingerprint.b[0])
+		ftSize := C.size_t(len(ftReq.Fingerprint.b))
 
-	C.Pex_Buffer_Set(cBuffer, ftData, ftSize)
+		C.Pex_Buffer_Set(cBuffer, ftData, ftSize)
 
-	C.Pex_StartSearchRequest_SetType(cRequest, C.Pex_SearchType(req.Type))
-	C.Pex_StartSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
-	if err := statusToError(cStatus); err != nil {
-		return nil, err
+		C.Pex_StartSearchRequest_SetFingerprint(cRequest, cBuffer, cStatus)
+		if err := statusToError(cStatus); err != nil {
+			return nil, err
+		}
+
+		C.Pex_StartSearchRequest_SetType(cRequest, C.Pex_SearchType(ftReq.Type))
+	} else if isrcReq != nil {
+		cISRC := C.CString(isrcReq.ISRC)
+		defer C.free(unsafe.Pointer(cISRC))
+
+		C.Pex_StartSearchRequest_SetISRC(cRequest, cISRC, C.int(reduceTypes(isrcReq.FingerprintTypes)))
+		C.Pex_StartSearchRequest_SetType(cRequest, C.Pex_SearchType(isrcReq.Type))
 	}
 
 	C.Pex_StartSearch(x.c, cRequest, cResult, cStatus)
