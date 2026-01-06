@@ -39,6 +39,27 @@ func (x *FingerprintType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (x FingerprintType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(x.String())
+}
+
+func (x FingerprintType) String() string {
+	switch x {
+	case FingerprintTypeVideo:
+		return "video"
+	case FingerprintTypeAudio:
+		return "audio"
+	case FingerprintTypeMelody:
+		return "melody"
+	case FingerprintTypePhonetic:
+		return "phonetic"
+	case FingerprintTypeClassification:
+		return "class"
+	default:
+		return "unknown"
+	}
+}
+
 const (
 	FingerprintTypeVideo          FingerprintType = 1
 	FingerprintTypeAudio          FingerprintType = 2
