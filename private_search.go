@@ -276,6 +276,10 @@ func (x *EntryStatus) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (x *EntryStatus) MarshalJSON() ([]byte, error) {
+	return json.Marshal(x.String())
+}
+
 func (x EntryStatus) String() string {
 	switch x {
 	case EntryStatusReady:
