@@ -10,6 +10,7 @@ package pex
 import "C"
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"unsafe"
 )
@@ -98,6 +99,10 @@ func (x *PrivateSearchClient) Close() error {
 // the search is finished, it does however perform a network operation
 // to initiate the search on the backend service.
 func (x *PrivateSearchClient) StartSearch(req *PrivateSearchRequest) (*PrivateSearchFuture, error) {
+	if len(req.Fingerprint.b) == 0 {
+		return nil, errors.New("empty fingerprint")
+	}
+
 	C.Pex_Lock()
 	defer C.Pex_Unlock()
 
