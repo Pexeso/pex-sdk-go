@@ -3,7 +3,7 @@
 // Package pex contains the Go bindings for the Pex SDK.
 //
 // Important! Please make sure to install the core library, as described in the
-// following link: https://docs.search.pex.com/installation/, before trying to use
+// following link: https://docs.pex.com/search/, before trying to use
 // the Go bindings.
 //
 // # Installation
