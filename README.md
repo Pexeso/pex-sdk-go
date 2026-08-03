@@ -1,9 +1,9 @@
-[![docs](https://img.shields.io/badge/docs-reference-blue.svg)](https://docs.search.pex.com/go/)
+[![docs](https://img.shields.io/badge/docs-reference-blue.svg)](https://docs.pex.com/search/)
 [![Language](https://img.shields.io/badge/Language-Go-blue.svg)](https://golang.org/)
 
 # Pex SDK for Golang
 
-Go bindings for the [Pex SDK](https://docs.search.pex.com).
+Go bindings for the [Pex SDK](https://docs.pex.com/search/).
 
 ### Installation
 
