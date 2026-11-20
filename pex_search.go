@@ -66,7 +66,7 @@ type PexSearchResult struct {
 	QueryFileDurationSeconds float32 `json:"query_file_duration_seconds"`
 
 	// The content classification of the query file, e.g. "music", "silence", "speech".
-	ContentClassification ContentClassification `json:"content_classification"`
+	ContentClassification *ContentClassification `json:"content_classification,omitempty"`
 }
 
 type PexSearchAsset struct {
